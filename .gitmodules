@@ -1,0 +1,3 @@
+[submodule "sotopia"]
+	path = sotopia
+	url = https://github.com/sotopia-lab/sotopia.git
