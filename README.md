@@ -28,14 +28,28 @@ The benchmark evaluates social intelligence in language agents by running simula
    - **OpenAI API Key** (for gpt-4o): Set the `OPENAI_API_KEY` environment variable
    - **DeepSeek API Key** (for DeepSeek-R1-Distill-Llama-8B): Set the `DEEPSEEK_API_KEY` environment variable
 
+   You can either export them directly:
    ```bash
    export OPENAI_API_KEY="your-openai-key"
    export DEEPSEEK_API_KEY="your-deepseek-key"
    ```
+   
+   Or create a `.env` file from the example:
+   ```bash
+   cp .env.example .env
+   # Then edit .env and add your API keys
+   ```
 
 ### Running the Benchmark
 
-#### Run benchmarks for both baseline models:
+#### Option 1: Using the shell script (recommended)
+```bash
+./run_benchmark.sh
+```
+
+This script will automatically load environment variables from `.env` file if it exists.
+
+#### Option 2: Using the Python script directly
 ```bash
 python run_baseline_benchmark.py
 ```
@@ -43,12 +57,26 @@ python run_baseline_benchmark.py
 #### Display existing results only (no new runs):
 ```bash
 python run_baseline_benchmark.py --only-show-performance
+# or
+./run_benchmark.sh --only-show-performance
 ```
 
 #### Run benchmarks for specific models:
 ```bash
 python run_baseline_benchmark.py --models gpt-4o --models deepseek/deepseek-r1-distill-llama-8b
 ```
+
+### Setup Verification
+
+Before running the benchmark, you can verify your setup:
+```bash
+python test_setup.py
+```
+
+This will check:
+- Required dependencies are installed
+- Environment variables are set correctly
+- Sotopia CLI is available
 
 ### Benchmark Details
 
@@ -76,3 +104,22 @@ The benchmark will generate:
 - [Sotopia Documentation](https://docs.sotopia.world)
 - [Sotopia Paper](https://arxiv.org/abs/2310.11667)
 - [Sotopia GitHub](https://github.com/sotopia-lab/sotopia)
+
+## Repository Structure
+
+```
+.
+├── README.md                    # This file
+├── run_baseline_benchmark.py    # Main Python script to run benchmarks
+├── run_benchmark.sh             # Convenience shell wrapper script
+├── test_setup.py                # Setup verification script
+├── .env.example                 # Example environment configuration
+└── sotopia/                     # Sotopia submodule
+```
+
+### File Descriptions
+
+- **run_baseline_benchmark.py**: Main Python script that wraps the Sotopia benchmark command. Supports flexible model selection and output options.
+- **run_benchmark.sh**: Shell wrapper that automatically loads `.env` file and runs the Python script.
+- **test_setup.py**: Verification script to check if all dependencies and API keys are properly configured.
+- **.env.example**: Template for environment configuration. Copy to `.env` and fill in your API keys.
