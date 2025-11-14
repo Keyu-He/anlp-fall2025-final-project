@@ -1,0 +1,179 @@
+From b2f06460eea45f8eea7701cb40f147f9b0aacd8f Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Thu, 13 Nov 2025 04:14:23 +0000
+Subject: [PATCH] Fix critical bugs in sotopia benchmark: logging and database
+ storage
+
+This commit fixes three critical bugs that prevent proper logging and
+database storage in the sotopia benchmark:
+
+1. **File Logging Not Working**
+   - Removed duplicate logging.basicConfig() call at module level in
+     benchmark.py that prevented FileHandler from being added
+   - Added force=True to _set_up_logs() to ensure proper reconfiguration
+   - Logs will now be written to files as intended
+
+2. **Database Save Failures Silently Ignored**
+   - Enhanced error messages in server.py to make database save failures
+     highly visible with detailed error context
+   - Added success logging to confirm when saves work
+   - Errors now show: error type, environment, agents, tag, and advice
+   - Users will now know immediately if database operations fail
+
+3. **Database Connection Issues Not Prominent**
+   - Upgraded migration errors from DEBUG to WARNING level in database/__init__.py
+   - Added CRITICAL prefix and explicit consequences to connection failures
+   - Made it clear that push_to_db operations will fail without proper Redis setup
+
+These fixes ensure that users can:
+- Review benchmark logs after runs complete
+- Know immediately when database saves fail
+- Understand what needs to be configured for proper database operation
+---
+ sotopia/cli/benchmark/benchmark.py | 14 +++++------
+ sotopia/database/__init__.py       | 14 ++++++++---
+ sotopia/server.py                  | 39 +++++++++++++++++++++++++++---
+ 3 files changed, 52 insertions(+), 15 deletions(-)
+
+diff --git a/sotopia/cli/benchmark/benchmark.py b/sotopia/cli/benchmark/benchmark.py
+index 2c6b233..56f7502 100644
+--- a/sotopia/cli/benchmark/benchmark.py
++++ b/sotopia/cli/benchmark/benchmark.py
+@@ -46,14 +46,9 @@ import os
+ # date and message only
+ FORMAT = "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
+ 
+-logging.basicConfig(
+-    level=20,
+-    format=FORMAT,
+-    datefmt="[%X]",
+-    handlers=[
+-        RichHandler(),
+-    ],
+-)
++# NOTE: Do NOT call logging.basicConfig() here at module level!
++# It will be called in _set_up_logs() function when the benchmark command runs.
++# Calling it twice causes the second call to be ignored, preventing FileHandler from being added.
+ 
+ default_model_list: list[str] = [
+     "gpt-4o",
+@@ -192,6 +187,8 @@ def _set_up_logs(
+     logging_path = Path(log_file)
+     logging_path.parent.mkdir(parents=True, exist_ok=True)
+ 
++    # FIX: Use force=True to reconfigure logging even if basicConfig was called before
++    # This ensures FileHandler gets added properly
+     logging.basicConfig(
+         level=log_file_level,
+         format=log_format,
+@@ -200,6 +197,7 @@ def _set_up_logs(
+             FileHandler(logging_path),
+             RichHandler(level=log_rich_level) if print_logs else RichHandler(level=100),
+         ],
++        force=True,  # Force reconfiguration to add FileHandler
+     )
+ 
+ 
+diff --git a/sotopia/database/__init__.py b/sotopia/database/__init__.py
+index c9e6f84..2836ff3 100644
+--- a/sotopia/database/__init__.py
++++ b/sotopia/database/__init__.py
+@@ -116,13 +116,17 @@ try:
+     redis_client.ping()
+     rprint(f"[green]Successfully connected to Redis database {redis_url}[/green]")
+ except redis.ConnectionError as e:
++    # FIX: Make connection errors more visible
+     logger.error(f"Failed to connect to Redis: {e}")
+-    rprint(f"[red]Failed to connect to Redis database {redis_url}[/red]")
++    rprint(f"[red]CRITICAL: Failed to connect to Redis database {redis_url}[/red]")
++    rprint(f"[red]Database operations (push_to_db) will FAIL! Please configure REDIS_OM_URL environment variable.[/red]")
+ try:
+     Migrator().run()
+ except Exception as e:
+-    logger.debug(
+-        f"Error running migrations: {e} This is expected if you have not set up redis yet."
++    # FIX: Change to warning level instead of debug, and make message clearer
++    logger.warning(
++        f"Error running migrations: {e}. If you haven't set up Redis yet, this is expected. "
++        f"Otherwise, check your Redis configuration."
+     )
+ 
+ # Try Redis OM connection
+@@ -131,7 +135,9 @@ try:
+     JsonModel()
+     rprint("[green]Successfully initialized Redis OM object[/green].")
+ except Exception as e:
++    # FIX: Make initialization errors more visible
+     logger.error(
+         f"Failed to initialize Redis OM object: {e}. The connection to your redis database might be problematic."
+     )
+-    rprint("[red]Failed to initialize Redis OM object[/red]")
++    rprint("[red]CRITICAL: Failed to initialize Redis OM object[/red]")
++    rprint("[red]Database save operations will FAIL! Check your Redis connection and REDIS_OM_URL.[/red]")
+diff --git a/sotopia/server.py b/sotopia/server.py
+index 844e987..753aafa 100644
+--- a/sotopia/server.py
++++ b/sotopia/server.py
+@@ -237,8 +237,19 @@ async def arun_one_episode(
+                 if simulation_status:
+                     simulation_status.status = "Completed"
+                     simulation_status.save()
++                logging.info(f"Successfully saved episode log to database with pk: {epilog.pk}")
+             except Exception as e:
+-                logging.error(f"Failed to save episode log: {e}")
++                # FIX: Make database save failures more visible with detailed error messages
++                logging.error("=" * 80)
++                logging.error(f"CRITICAL: Failed to save episode log to database!")
++                logging.error(f"Error: {type(e).__name__}: {e}")
++                logging.error(f"Episode data will be lost! Check your Redis connection and configuration.")
++                logging.error(f"Environment: {epilog.environment}")
++                logging.error(f"Agents: {epilog.agents}")
++                logging.error(f"Tag: {epilog.tag}")
++                logging.error("=" * 80)
++                # Note: We don't re-raise to allow the benchmark to continue with other episodes
++                # but the error is now much more visible in the logs
+ 
+     if streaming:
+         return generate_messages()
+@@ -459,8 +470,19 @@ async def arun_one_script(
+     if push_to_db:
+         try:
+             epilog.save()
++            logging.info(f"Successfully saved episode log to database with pk: {epilog.pk}")
+         except Exception as e:
+-            logging.error(f"Failed to save episode log: {e}")
++            # FIX: Make database save failures more visible with detailed error messages
++            logging.error("=" * 80)
++            logging.error(f"CRITICAL: Failed to save episode log to database!")
++            logging.error(f"Error: {type(e).__name__}: {e}")
++            logging.error(f"Episode data will be lost! Check your Redis connection and configuration.")
++            logging.error(f"Environment: {epilog.environment}")
++            logging.error(f"Agents: {epilog.agents}")
++            logging.error(f"Tag: {epilog.tag}")
++            logging.error("=" * 80)
++            # Note: We don't re-raise to allow the script generation to continue
++            # but the error is now much more visible in the logs
+     # flatten nested list messages
+     return list(itertools.chain(*messages))
+ 
+@@ -518,5 +540,16 @@ async def aevaluate_one_episode(
+     if push_to_db:
+         try:
+             epilog.save()
++            logging.info(f"Successfully saved re-evaluated episode log to database with pk: {epilog.pk}")
+         except Exception as e:
+-            logging.error(f"Failed to save episode log: {e}")
++            # FIX: Make database save failures more visible with detailed error messages
++            logging.error("=" * 80)
++            logging.error(f"CRITICAL: Failed to save re-evaluated episode log to database!")
++            logging.error(f"Error: {type(e).__name__}: {e}")
++            logging.error(f"Episode data will be lost! Check your Redis connection and configuration.")
++            logging.error(f"Environment: {epilog.environment}")
++            logging.error(f"Agents: {epilog.agents}")
++            logging.error(f"Tag: {epilog.tag}")
++            logging.error("=" * 80)
++            # Note: We don't re-raise to allow the evaluation to continue
++            # but the error is now much more visible in the logs
+-- 
+2.43.0
+
