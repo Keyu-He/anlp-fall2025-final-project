@@ -4,34 +4,12 @@ set -e
 # ====== 配置区域 ======
 ENV_IDS=(
 "01H7VFHNV13MHN97GAH73E3KM8"
-"01H7VFHN5WVC5HKKVBHZBA553R"
-"01H7VFHN9W0WAFZCBT09PKJJNK"
-"01H7VFHPDZVVCDZR3AARA547CY"
-"01H7VFHPQQQY6H4DNC6NBQ8XTG"
-"01H7VFHN7WJK7VWVRZZTQ6DX9T"
-"01H7VFHPS5WJW2694R1MNC8JFY"
-"01H7VFHNN7XTR99319DS8KZCQM"
-"01H7VFHQ11NAMZS4A2RDGDB01V"
-"01H7VFHPSWGDGEYRP63H2DJKV0"
-"01H7VFHNF4G18PC9JHGRC8A1R6"
-"01H7VFHNNYH3W0VRWVY178K2TK"
-"01H7VFHP8AN5643B0NR0NP00VE"
-"01H7VFHN7A1ZX5KSMT2YN9RXC4"
 )
-
-# env + partner: gpt-4o via LiteLLM (uses OPENAI_BASE_URL)
 export ENV_MODEL="custom/gpt-4o-2024-08-06@https://ai-gateway.andrew.cmu.edu/v1"
 export AGENT1_MODEL="custom/gpt-4o-2024-08-06@https://ai-gateway.andrew.cmu.edu/v1"
-# test agent: Qwen served on localhost:8000 (via ssh -L)
-export AGENT2_MODEL="custom/Qwen/Qwen2.5-7B-Instruct@http://localhost:8000/v1"
+export AGENT2_MODEL="custom/llama3-2-11b-instruct@https://ai-gateway.andrew.cmu.edu/v1"
 export TAG="my_tag"
 export PUSH_TO_DB="False"
-export SAVE_DIR="${SAVE_DIR:-$PWD/results}"
-mkdir -p "$SAVE_DIR"
-if [[ -z "${SOTOPIA_REWARD_LOG:-}" ]]; then
-  timestamp="$(date +"%Y%m%d_%H%M%S")"
-  export SOTOPIA_REWARD_LOG="$SAVE_DIR/rewards_${timestamp}.jsonl"
-fi
 
 ENV_IDS_STR=$(printf '"%s",' "${ENV_IDS[@]}")
 ENV_IDS_STR="[${ENV_IDS_STR%,}]"
@@ -47,7 +25,6 @@ python examples/experiment_eval.py \
   --gin.PUSH_TO_DB=False \
   --gin.PRINT_LOGS=True \
   --gin.VERBOSE=True \
-  "--gin.SAVE_DIR='${SAVE_DIR}'" \
   --gin.ENV_IDS="${ENV_IDS_STR}" \
   "--gin.ENV_MODEL='${ENV_MODEL}'" \
   "--gin.AGENT1_MODEL='${AGENT1_MODEL}'" \
