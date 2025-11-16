@@ -31,6 +31,14 @@ def load_and_analyze(file_path, benchmark_name):
         # Get full conversation
         messages = meta.get('messages', [[]])[1] if len(meta.get('messages', [])) > 1 else []
 
+        # Format conversation as string for CSV
+        conversation_text = ""
+        for i, msg in enumerate(messages):
+            if len(msg) >= 3:
+                speaker = msg[0]
+                content = msg[2]
+                conversation_text += f"\n[Message {i+1}] {speaker}: {content}\n"
+
         example = {
             'benchmark': benchmark_name,
             'scenario_id': env['id'],
@@ -43,7 +51,8 @@ def load_and_analyze(file_path, benchmark_name):
             'social_rules': metrics['social_rules'],
             'financial_and_material_benefits': metrics['financial_and_material_benefits'],
             'goal': metrics['goal'],
-            'full_messages': messages
+            'full_messages': messages,
+            'conversation': conversation_text
         }
         examples.append(example)
 
@@ -86,17 +95,28 @@ for metric in metrics:
         print(f"    secret: {row['secret']}")
         print(f"    social_rules: {row['social_rules']}")
 
-        print(f"\n  FULL CONVERSATION:")
+        print(f"\n  FULL CONVERSATION ({len(row['full_messages'])} messages):")
         print("  " + "-"*76)
-        for msg in row['full_messages']:
+        for i, msg in enumerate(row['full_messages']):
             if len(msg) >= 3:
                 speaker = msg[0]
-                recipient = msg[1]
                 content = msg[2]
-                print(f"\n  {speaker} -> {recipient}:")
-                print(f"    {content}")
-        print("  " + "-"*76)
+                print(f"\n  [{i+1}] {speaker}:")
+                print(f"      {content}")
+        print("\n  " + "-"*76)
         print()
+
+print("\n" + "="*80)
+print("Saving detailed examples with full conversations to CSV...")
+print("="*80)
+
+for metric in metrics:
+    bottom_5 = df.nsmallest(5, metric)
+    # Drop the full_messages column (not CSV-friendly) but keep conversation text
+    bottom_5_csv = bottom_5.drop(columns=['full_messages'])
+    filename = f'low_{metric}_examples.csv'
+    bottom_5_csv.to_csv(filename, index=False)
+    print(f"✓ Saved: {filename} ({len(bottom_5)} examples)")
 
 print("\n" + "="*80)
 print("Analysis complete!")

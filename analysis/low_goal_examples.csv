@@ -1,26 +1,56 @@
-benchmark,scenario_id,agent_name,overall_score,believability,relationship,knowledge,secret,social_rules,financial_and_material_benefits,goal,conversation_sample
-Sotopia All,01H7VFHPQQQY6H4DNC6NBQ8XTG,Hendrick Heinz,1.7142857142857142,9.0,0.0,2.0,0.0,0.0,-1.0,2.0,"Environment: Turn #0: Samuel Anderson said: ""Hey Hendrick, I'm really interested in the Samsung Galaxy S8. I see you have quite a few of them, and since you're willing to offer a deal for multiple purchases, I'm thinking we might be able to work something out for a single one too. How about $400 for one phone?""
+benchmark,scenario_id,agent_name,overall_score,believability,relationship,knowledge,secret,social_rules,financial_and_material_benefits,goal,conversation
+Sotopia All,01H7VFHPQQQY6H4DNC6NBQ8XTG,Hendrick Heinz,1.7142857142857142,9.0,0.0,2.0,0.0,0.0,-1.0,2.0,"
+[Message 1] Environment: Turn #0: Samuel Anderson said: ""Hey Hendrick, I'm really interested in the Samsung Galaxy S8. I see you have quite a few of them, and since you're willing to offer a deal for multiple purchases, I'm thinking we might be able to work something out for a single one too. How about $400 for one phone?""
 
-Environment: Turn #0: Samuel Anderson said: ""Hey Hendrick, I'm really interested in the Samsung Galaxy S8. I see you have quite a few of them, and since you're willing to offer a deal for multiple purchases, I'm thinking we might be able to work something out for a single one too. How about $400 for one phone?""
 
-Samuel Anderson: did nothing"
-Sotopia All,01H7VFHPM3NVVKSGCCB4S10465,Gwen Pierce,2.0,9.0,0.0,3.0,0.0,0.0,0.0,2.0,"Environment: Turn #0: Finnegan O'Malley said: ""Ah, what a lovely party! It's always nice to meet new faces. You know, being a lighthouse keeper might seem isolating, but I've managed to make a few friends along the way. Do you often find yourself around people from H. J. Heinz Company? I seem to bump into folks from there quite a bit.""
+[Message 2] Environment: Turn #0: Samuel Anderson said: ""Hey Hendrick, I'm really interested in the Samsung Galaxy S8. I see you have quite a few of them, and since you're willing to offer a deal for multiple purchases, I'm thinking we might be able to work something out for a single one too. How about $400 for one phone?""
 
-Environment: Turn #0: Finnegan O'Malley said: ""Ah, what a lovely party! It's always nice to meet new faces. You know, being a lighthouse keeper might seem isolating, but I've managed to make a few friends along the way. Do you often find yourself around people from H. J. Heinz Company? I seem to bump into folks from there quite a bit.""
 
-Finnegan O'Malley: did nothing"
-Sotopia Hard,01H7VFHPSWGDGEYRP63H2DJKV0,Zane Bennett,1.5714285714285714,9.0,0.0,0.0,0.0,0.0,0.0,2.0,"Environment: Turn #0: Giselle Rousseau said: ""Hi Zane, I'm interested in the Tile Mate Item Tracker you're selling. I love exploring new places on my bike and could really use something like this to keep track of my belongings. However, my budget is a bit tight right now. Would you be open to selling it for $14?”}""
+[Message 3] Samuel Anderson: did nothing
 
-Environment: Turn #0: Giselle Rousseau said: ""Hi Zane, I'm interested in the Tile Mate Item Tracker you're selling. I love exploring new places on my bike and could really use something like this to keep track of my belongings. However, my budget is a bit tight right now. Would you be open to selling it for $14?”}""
+[Message 4] Hendrick Heinz: said: ""Samuel, I appreciate your interest in the Samsung Galaxy S8. Given the condition and the fact that they are brand new, I believe $610 is a fair price for a single phone. If you think you can offer more, let's discuss further.""
+"
+Sotopia All,01H7VFHPM3NVVKSGCCB4S10465,Gwen Pierce,2.0,9.0,0.0,3.0,0.0,0.0,0.0,2.0,"
+[Message 1] Environment: Turn #0: Finnegan O'Malley said: ""Ah, what a lovely party! It's always nice to meet new faces. You know, being a lighthouse keeper might seem isolating, but I've managed to make a few friends along the way. Do you often find yourself around people from H. J. Heinz Company? I seem to bump into folks from there quite a bit.""
 
-Giselle Rousseau: did nothing"
-Sotopia Hard,01H7VFHQ11NAMZS4A2RDGDB01V,William Brown,2.142857142857143,9.0,0.0,5.0,0.0,0.0,-1.0,2.0,"Environment: Turn #0: Eli Dawson said: ""Hello! I’ve got quite a knack for antique items, and this table has certainly caught my eye with its craftsmanship from the late 1800s. Although $60 is a fair price, I’m hoping we can negotiate a bit. Would you consider $30 for it?""
 
-Environment: Turn #0: Eli Dawson said: ""Hello! I’ve got quite a knack for antique items, and this table has certainly caught my eye with its craftsmanship from the late 1800s. Although $60 is a fair price, I’m hoping we can negotiate a bit. Would you consider $30 for it?""
+[Message 2] Environment: Turn #0: Finnegan O'Malley said: ""Ah, what a lovely party! It's always nice to meet new faces. You know, being a lighthouse keeper might seem isolating, but I've managed to make a few friends along the way. Do you often find yourself around people from H. J. Heinz Company? I seem to bump into folks from there quite a bit.""
 
-Eli Dawson: did nothing"
-Sotopia All,01H7VFHPRFCSA3BTT39BRBZX7H,Zane Bennett,2.2857142857142856,9.0,2.0,5.0,0.0,0.0,-3.0,3.0,"Environment: Turn #0: Giselle Rousseau said: ""Hi there! I'm interested in the TV, it sounds fantastic especially with the smart features and the 'Magic Remote'. However, my budget is a bit tight as I'm just a student. Would you consider selling it for $174? I hope we can find a fair deal.""
 
-Environment: Turn #0: Giselle Rousseau said: ""Hi there! I'm interested in the TV, it sounds fantastic especially with the smart features and the 'Magic Remote'. However, my budget is a bit tight as I'm just a student. Would you consider selling it for $174? I hope we can find a fair deal.""
+[Message 3] Finnegan O'Malley: did nothing
 
-Giselle Rousseau: did nothing"
+[Message 4] Gwen Pierce: said: ""Hello there! I'm actually a social worker, so I don't work with H. J. Heinz Company. But I enjoy meeting new people like you. By the way, have you met anyone here who might share a hobby with me? Like, do you know anyone who enjoys crafting or maybe kayaking?""
+"
+Sotopia Hard,01H7VFHPSWGDGEYRP63H2DJKV0,Zane Bennett,1.5714285714285714,9.0,0.0,0.0,0.0,0.0,0.0,2.0,"
+[Message 1] Environment: Turn #0: Giselle Rousseau said: ""Hi Zane, I'm interested in the Tile Mate Item Tracker you're selling. I love exploring new places on my bike and could really use something like this to keep track of my belongings. However, my budget is a bit tight right now. Would you be open to selling it for $14?”}""
+
+
+[Message 2] Environment: Turn #0: Giselle Rousseau said: ""Hi Zane, I'm interested in the Tile Mate Item Tracker you're selling. I love exploring new places on my bike and could really use something like this to keep track of my belongings. However, my budget is a bit tight right now. Would you be open to selling it for $14?”}""
+
+
+[Message 3] Giselle Rousseau: did nothing
+
+[Message 4] Zane Bennett: said: ""Hi Giselle, I appreciate your interest in the Tile Mate Item Tracker. I understand you're trying to work within a budget, but unfortunately, I've set the price at $20.00, which is non-negotiable. I value fairness, and that's the price I've decided on. If you think it fits within your budget, we can make a deal!""
+"
+Sotopia Hard,01H7VFHQ11NAMZS4A2RDGDB01V,William Brown,2.142857142857143,9.0,0.0,5.0,0.0,0.0,-1.0,2.0,"
+[Message 1] Environment: Turn #0: Eli Dawson said: ""Hello! I’ve got quite a knack for antique items, and this table has certainly caught my eye with its craftsmanship from the late 1800s. Although $60 is a fair price, I’m hoping we can negotiate a bit. Would you consider $30 for it?""
+
+
+[Message 2] Environment: Turn #0: Eli Dawson said: ""Hello! I’ve got quite a knack for antique items, and this table has certainly caught my eye with its craftsmanship from the late 1800s. Although $60 is a fair price, I’m hoping we can negotiate a bit. Would you consider $30 for it?""
+
+
+[Message 3] Eli Dawson: did nothing
+
+[Message 4] William Brown: said: ""Eli, I appreciate your interest in the table. While $30 is quite a bit lower than the value of the piece, I understand that prices can be flexible. How about we meet somewhere in the middle? Perhaps $45 seems reasonable?""
+"
+Sotopia All,01H7VFHPRFCSA3BTT39BRBZX7H,Zane Bennett,2.2857142857142856,9.0,2.0,5.0,0.0,0.0,-3.0,3.0,"
+[Message 1] Environment: Turn #0: Giselle Rousseau said: ""Hi there! I'm interested in the TV, it sounds fantastic especially with the smart features and the 'Magic Remote'. However, my budget is a bit tight as I'm just a student. Would you consider selling it for $174? I hope we can find a fair deal.""
+
+
+[Message 2] Environment: Turn #0: Giselle Rousseau said: ""Hi there! I'm interested in the TV, it sounds fantastic especially with the smart features and the 'Magic Remote'. However, my budget is a bit tight as I'm just a student. Would you consider selling it for $174? I hope we can find a fair deal.""
+
+
+[Message 3] Giselle Rousseau: did nothing
+
+[Message 4] Zane Bennett: said: ""Hello Giselle, I understand your budget constraints as a student. The TV does indeed have some amazing features, but I've set my target price at $263. Since you're very interested, let's see if we can come up with a creative solution. How about we split the difference? How does $235 sound to you?""
+"
