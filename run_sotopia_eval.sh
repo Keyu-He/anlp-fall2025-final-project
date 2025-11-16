@@ -2,26 +2,26 @@
 set -e
 
 # ====== 配置区域 ======
-# # SOTOPIA HARD
-# ENV_IDS=(
-# "01H7VFHNV13MHN97GAH73E3KM8"
-# "01H7VFHN5WVC5HKKVBHZBA553R"
-# "01H7VFHN9W0WAFZCBT09PKJJNK"
-# "01H7VFHPDZVVCDZR3AARA547CY"
-# "01H7VFHPQQQY6H4DNC6NBQ8XTG"
-# "01H7VFHN7WJK7VWVRZZTQ6DX9T"
-# "01H7VFHPS5WJW2694R1MNC8JFY"
-# "01H7VFHNN7XTR99319DS8KZCQM"
-# "01H7VFHQ11NAMZS4A2RDGDB01V"
-# "01H7VFHPSWGDGEYRP63H2DJKV0"
-# "01H7VFHNF4G18PC9JHGRC8A1R6"
-# "01H7VFHNNYH3W0VRWVY178K2TK"
-# "01H7VFHP8AN5643B0NR0NP00VE"
-# "01H7VFHN7A1ZX5KSMT2YN9RXC4"
-# )
+# SOTOPIA HARD
+HARD_ENV_IDS=(
+  "01H7VFHNV13MHN97GAH73E3KM8"
+  "01H7VFHN5WVC5HKKVBHZBA553R"
+  "01H7VFHN9W0WAFZCBT09PKJJNK"
+  "01H7VFHPDZVVCDZR3AARA547CY"
+  "01H7VFHPQQQY6H4DNC6NBQ8XTG"
+  "01H7VFHN7WJK7VWVRZZTQ6DX9T"
+  "01H7VFHPS5WJW2694R1MNC8JFY"
+  "01H7VFHNN7XTR99319DS8KZCQM"
+  "01H7VFHQ11NAMZS4A2RDGDB01V"
+  "01H7VFHPSWGDGEYRP63H2DJKV0"
+  "01H7VFHNF4G18PC9JHGRC8A1R6"
+  "01H7VFHNNYH3W0VRWVY178K2TK"
+  "01H7VFHP8AN5643B0NR0NP00VE"
+  "01H7VFHN7A1ZX5KSMT2YN9RXC4"
+)
 
 # SOTOPIA ALL
-ENV_IDS=(
+ALL_ENV_IDS=(
   "01H7VFHP1JEP91TTK5PEK39D2S"
   "01H7VFHNH8A88C4XJ7X4PVAHV4"
   "01H7VFHNR1RJKDZ9V9MDTJ1SJP"
@@ -114,36 +114,65 @@ ENV_IDS=(
   "01H7VFHQ2EA3TTFZQ3M6DF3YCD"
 )
 
+# 第 1 个参数: 测试模型名（例如 Qwen/Qwen2.5-7B-Instruct）
+MODEL_NAME="${1:-Qwen/Qwen2.5-7B-Instruct}"
+# 第 2 个参数: 模型服务端口（默认 8000，例如 ssh -L 8000:localhost:8000 ...）
+PORT="${2:-8000}"
+
 # env + partner: gpt-4o via LiteLLM (uses OPENAI_BASE_URL)
 export ENV_MODEL="custom/gpt-4o-2024-08-06@https://ai-gateway.andrew.cmu.edu/v1"
 export AGENT1_MODEL="custom/gpt-4o-2024-08-06@https://ai-gateway.andrew.cmu.edu/v1"
-# test agent: Qwen served on localhost:8000 (via ssh -L)
-export AGENT2_MODEL="custom/Qwen/Qwen2.5-7B-Instruct@http://localhost:8000/v1"
-export TAG="my_tag"
+# test agent: 自定义模型，经本机端口访问 (via ssh -L)
+export AGENT2_MODEL="custom/${MODEL_NAME}@http://localhost:${PORT}/v1"
+
+# 用于文件命名的模型名
+MODEL_NAME_SAFE="${MODEL_NAME//\//_}"
+
 export PUSH_TO_DB="False"
 export SAVE_DIR="${SAVE_DIR:-$PWD/results}"
 mkdir -p "$SAVE_DIR"
-if [[ -z "${SOTOPIA_REWARD_LOG:-}" ]]; then
-  timestamp="$(date +"%Y%m%d_%H%M%S")"
-  export SOTOPIA_REWARD_LOG="$SAVE_DIR/rewards_${timestamp}.jsonl"
-fi
 
-ENV_IDS_STR=$(printf '"%s",' "${ENV_IDS[@]}")
-ENV_IDS_STR="[${ENV_IDS_STR%,}]"
+BATCH_SIZE=8
 
 cd sotopia
 
-# ====== 执行命令 ======
+# # ====== 先跑 SOTOPIA HARD ======
+# HARD_ENV_IDS_STR=$(printf '"%s",' "${HARD_ENV_IDS[@]}"); HARD_ENV_IDS_STR="[${HARD_ENV_IDS_STR%,}]"
+# export TAG="sotopia_hard_${MODEL_NAME_SAFE}"
+# timestamp="$(date +"%Y%m%d_%H%M%S")"
+# export SOTOPIA_REWARD_LOG="$SAVE_DIR/sotopia_hard_gpt-4o_${MODEL_NAME_SAFE}_${timestamp}.jsonl"
+
+# python examples/experiment_eval.py \
+#   --gin_file sotopia_conf/generation_utils_conf/generate.gin \
+#   --gin_file sotopia_conf/server_conf/server.gin \
+#   --gin_file sotopia_conf/run_async_server_in_batch.gin \
+#   --gin.BATCH_SIZE=${BATCH_SIZE} \
+#   --gin.PUSH_TO_DB=False \
+#   --gin.PRINT_LOGS=True \
+#   --gin.VERBOSE=True \
+#   "--gin.SAVE_DIR='${SAVE_DIR}'" \
+#   --gin.ENV_IDS="${HARD_ENV_IDS_STR}" \
+#   "--gin.ENV_MODEL='${ENV_MODEL}'" \
+#   "--gin.AGENT1_MODEL='${AGENT1_MODEL}'" \
+#   "--gin.AGENT2_MODEL='${AGENT2_MODEL}'" \
+#   "--gin.TAG='${TAG}'"
+
+# ====== 再跑 SOTOPIA ALL ======
+ALL_ENV_IDS_STR=$(printf '"%s",' "${ALL_ENV_IDS[@]}"); ALL_ENV_IDS_STR="[${ALL_ENV_IDS_STR%,}]"
+export TAG="sotopia_all_${MODEL_NAME_SAFE}"
+timestamp="$(date +"%Y%m%d_%H%M%S")"
+export SOTOPIA_REWARD_LOG="$SAVE_DIR/sotopia_all_gpt-4o_${MODEL_NAME_SAFE}_${timestamp}.jsonl"
+
 python examples/experiment_eval.py \
   --gin_file sotopia_conf/generation_utils_conf/generate.gin \
   --gin_file sotopia_conf/server_conf/server.gin \
   --gin_file sotopia_conf/run_async_server_in_batch.gin \
-  --gin.BATCH_SIZE=5 \
+  --gin.BATCH_SIZE=${BATCH_SIZE} \
   --gin.PUSH_TO_DB=False \
   --gin.PRINT_LOGS=True \
   --gin.VERBOSE=True \
   "--gin.SAVE_DIR='${SAVE_DIR}'" \
-  --gin.ENV_IDS="${ENV_IDS_STR}" \
+  --gin.ENV_IDS="${ALL_ENV_IDS_STR}" \
   "--gin.ENV_MODEL='${ENV_MODEL}'" \
   "--gin.AGENT1_MODEL='${AGENT1_MODEL}'" \
   "--gin.AGENT2_MODEL='${AGENT2_MODEL}'" \
