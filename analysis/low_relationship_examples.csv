@@ -1,26 +1,56 @@
-benchmark,scenario_id,agent_name,overall_score,believability,relationship,knowledge,secret,social_rules,financial_and_material_benefits,goal,conversation_sample
-Sotopia All,01H7VFHNF4G18PC9JHGRC8A1R6,Isabella White,2.0,8.0,-2.0,7.0,0.0,0.0,-3.0,4.0,"Environment: Turn #0: Mia Davis said: ""Isabella, I've been meaning to have a chat with you. I've noticed that there have been a few issues around the house that we need to address. It's important for me to maintain a certain order here, and I've observed that some of the house rules I have in place haven't been followed. Can we talk about this and find a solution?""
+benchmark,scenario_id,agent_name,overall_score,believability,relationship,knowledge,secret,social_rules,financial_and_material_benefits,goal,conversation
+Sotopia All,01H7VFHNF4G18PC9JHGRC8A1R6,Isabella White,2.0,8.0,-2.0,7.0,0.0,0.0,-3.0,4.0,"
+[Message 1] Environment: Turn #0: Mia Davis said: ""Isabella, I've been meaning to have a chat with you. I've noticed that there have been a few issues around the house that we need to address. It's important for me to maintain a certain order here, and I've observed that some of the house rules I have in place haven't been followed. Can we talk about this and find a solution?""
 
-Environment: Turn #0: Mia Davis said: ""Isabella, I've been meaning to have a chat with you. I've noticed that there have been a few issues around the house that we need to address. It's important for me to maintain a certain order here, and I've observed that some of the house rules I have in place haven't been followed. Can we talk about this and find a solution?""
 
-Mia Davis: did nothing"
-Sotopia All,01H7VFHN3Q7498S3R4R2VDSXA0,Baxter Sterling,1.2857142857142858,8.0,-1.0,2.0,-5.0,0.0,0.0,5.0,"Environment: Turn #0: Hendrick Heinz said: ""Hey Baxter, I've been thinking... If we both stick to our story and stay silent, we could get out of this with just a fine. It's risky to turn on each other, don't you think? We're both seasoned enough to know the consequences if we don't play this smart.""
+[Message 2] Environment: Turn #0: Mia Davis said: ""Isabella, I've been meaning to have a chat with you. I've noticed that there have been a few issues around the house that we need to address. It's important for me to maintain a certain order here, and I've observed that some of the house rules I have in place haven't been followed. Can we talk about this and find a solution?""
 
-Environment: Turn #0: Hendrick Heinz said: ""Hey Baxter, I've been thinking... If we both stick to our story and stay silent, we could get out of this with just a fine. It's risky to turn on each other, don't you think? We're both seasoned enough to know the consequences if we don't play this smart.""
 
-Hendrick Heinz: did nothing"
-Sotopia All,01H7VFHNFVGFY578101R2PCV3T,Hendrick Heinz,3.2857142857142856,8.0,-1.0,9.0,0.0,0.0,0.0,7.0,"Environment: Turn #0: Leo Williams said: ""Hendrick, there's something I need to talk to you about. I want to be honest with you because I value our friendship. I've been involved with your partner, and it's weighing heavily on me. It was wrong, and I'm sorry for the pain this might cause. I know there's no easy way to say this, but you deserve to know the truth.""
+[Message 3] Mia Davis: did nothing
 
-Environment: Turn #0: Leo Williams said: ""Hendrick, there's something I need to talk to you about. I want to be honest with you because I value our friendship. I've been involved with your partner, and it's weighing heavily on me. It was wrong, and I'm sorry for the pain this might cause. I know there's no easy way to say this, but you deserve to know the truth.""
+[Message 4] Isabella White: said: ""Of course, Mia. I understand that maintaining a clean and orderly home is important to you. I'll make sure to follow the house rules more strictly from now on.""
+"
+Sotopia All,01H7VFHN3Q7498S3R4R2VDSXA0,Baxter Sterling,1.2857142857142858,8.0,-1.0,2.0,-5.0,0.0,0.0,5.0,"
+[Message 1] Environment: Turn #0: Hendrick Heinz said: ""Hey Baxter, I've been thinking... If we both stick to our story and stay silent, we could get out of this with just a fine. It's risky to turn on each other, don't you think? We're both seasoned enough to know the consequences if we don't play this smart.""
 
-Leo Williams: did nothing"
-Sotopia All,01H7VFHPQQQY6H4DNC6NBQ8XTG,Hendrick Heinz,1.7142857142857142,9.0,0.0,2.0,0.0,0.0,-1.0,2.0,"Environment: Turn #0: Samuel Anderson said: ""Hey Hendrick, I'm really interested in the Samsung Galaxy S8. I see you have quite a few of them, and since you're willing to offer a deal for multiple purchases, I'm thinking we might be able to work something out for a single one too. How about $400 for one phone?""
 
-Environment: Turn #0: Samuel Anderson said: ""Hey Hendrick, I'm really interested in the Samsung Galaxy S8. I see you have quite a few of them, and since you're willing to offer a deal for multiple purchases, I'm thinking we might be able to work something out for a single one too. How about $400 for one phone?""
+[Message 2] Environment: Turn #0: Hendrick Heinz said: ""Hey Baxter, I've been thinking... If we both stick to our story and stay silent, we could get out of this with just a fine. It's risky to turn on each other, don't you think? We're both seasoned enough to know the consequences if we don't play this smart.""
 
-Samuel Anderson: did nothing"
-Sotopia All,01H7VFHPM3NVVKSGCCB4S10465,Gwen Pierce,2.0,9.0,0.0,3.0,0.0,0.0,0.0,2.0,"Environment: Turn #0: Finnegan O'Malley said: ""Ah, what a lovely party! It's always nice to meet new faces. You know, being a lighthouse keeper might seem isolating, but I've managed to make a few friends along the way. Do you often find yourself around people from H. J. Heinz Company? I seem to bump into folks from there quite a bit.""
 
-Environment: Turn #0: Finnegan O'Malley said: ""Ah, what a lovely party! It's always nice to meet new faces. You know, being a lighthouse keeper might seem isolating, but I've managed to make a few friends along the way. Do you often find yourself around people from H. J. Heinz Company? I seem to bump into folks from there quite a bit.""
+[Message 3] Hendrick Heinz: did nothing
 
-Finnegan O'Malley: did nothing"
+[Message 4] Baxter Sterling: said: ""Hendrick, I appreciate your cautious approach. However, considering the situation, I think it might be wiser for us to cooperate. They have enough evidence against us, and confessing about the bigger crime could potentially get us both off with just a fine instead of a decade behind bars. Besides, we owe it to ourselves to make the most rational choice.""
+"
+Sotopia All,01H7VFHNFVGFY578101R2PCV3T,Hendrick Heinz,3.2857142857142856,8.0,-1.0,9.0,0.0,0.0,0.0,7.0,"
+[Message 1] Environment: Turn #0: Leo Williams said: ""Hendrick, there's something I need to talk to you about. I want to be honest with you because I value our friendship. I've been involved with your partner, and it's weighing heavily on me. It was wrong, and I'm sorry for the pain this might cause. I know there's no easy way to say this, but you deserve to know the truth.""
+
+
+[Message 2] Environment: Turn #0: Leo Williams said: ""Hendrick, there's something I need to talk to you about. I want to be honest with you because I value our friendship. I've been involved with your partner, and it's weighing heavily on me. It was wrong, and I'm sorry for the pain this might cause. I know there's no easy way to say this, but you deserve to know the truth.""
+
+
+[Message 3] Leo Williams: did nothing
+
+[Message 4] Hendrick Heinz: said: ""Leo, I didn't see this coming. I understand why you did what you did, and I appreciate you telling me the truth. I just... I feel like my world has been turned upside down. But our friendship means a lot to me, and I hope we can figure this out together.""
+"
+Sotopia All,01H7VFHPQQQY6H4DNC6NBQ8XTG,Hendrick Heinz,1.7142857142857142,9.0,0.0,2.0,0.0,0.0,-1.0,2.0,"
+[Message 1] Environment: Turn #0: Samuel Anderson said: ""Hey Hendrick, I'm really interested in the Samsung Galaxy S8. I see you have quite a few of them, and since you're willing to offer a deal for multiple purchases, I'm thinking we might be able to work something out for a single one too. How about $400 for one phone?""
+
+
+[Message 2] Environment: Turn #0: Samuel Anderson said: ""Hey Hendrick, I'm really interested in the Samsung Galaxy S8. I see you have quite a few of them, and since you're willing to offer a deal for multiple purchases, I'm thinking we might be able to work something out for a single one too. How about $400 for one phone?""
+
+
+[Message 3] Samuel Anderson: did nothing
+
+[Message 4] Hendrick Heinz: said: ""Samuel, I appreciate your interest in the Samsung Galaxy S8. Given the condition and the fact that they are brand new, I believe $610 is a fair price for a single phone. If you think you can offer more, let's discuss further.""
+"
+Sotopia All,01H7VFHPM3NVVKSGCCB4S10465,Gwen Pierce,2.0,9.0,0.0,3.0,0.0,0.0,0.0,2.0,"
+[Message 1] Environment: Turn #0: Finnegan O'Malley said: ""Ah, what a lovely party! It's always nice to meet new faces. You know, being a lighthouse keeper might seem isolating, but I've managed to make a few friends along the way. Do you often find yourself around people from H. J. Heinz Company? I seem to bump into folks from there quite a bit.""
+
+
+[Message 2] Environment: Turn #0: Finnegan O'Malley said: ""Ah, what a lovely party! It's always nice to meet new faces. You know, being a lighthouse keeper might seem isolating, but I've managed to make a few friends along the way. Do you often find yourself around people from H. J. Heinz Company? I seem to bump into folks from there quite a bit.""
+
+
+[Message 3] Finnegan O'Malley: did nothing
+
+[Message 4] Gwen Pierce: said: ""Hello there! I'm actually a social worker, so I don't work with H. J. Heinz Company. But I enjoy meeting new people like you. By the way, have you met anyone here who might share a hobby with me? Like, do you know anyone who enjoys crafting or maybe kayaking?""
+"
