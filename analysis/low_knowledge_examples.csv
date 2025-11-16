@@ -1,0 +1,26 @@
+benchmark,scenario_id,agent_name,overall_score,believability,relationship,knowledge,secret,social_rules,financial_and_material_benefits,goal,conversation_sample
+Sotopia All,01H7VFHNKVTCAGBA299VQG1QS2,Lena Goodwin,2.857142857142857,9.0,1.0,0.0,0.0,0.0,0.0,10.0,"Environment: Turn #0: Naomi Fletcher said: ""Hey Lena, this trivia question has me stumped! I know you're good with all sorts of knowledge – any thoughts on the answer?""
+
+Environment: Turn #0: Naomi Fletcher said: ""Hey Lena, this trivia question has me stumped! I know you're good with all sorts of knowledge – any thoughts on the answer?""
+
+Naomi Fletcher: did nothing"
+Sotopia All,01H7VFHN7A1ZX5KSMT2YN9RXC4,Ethan Smith,3.0,10.0,3.0,0.0,0.0,0.0,0.0,8.0,"Environment: Turn #0: Eli Dawson said: ""Hey Ethan, ever thought about getting into vinyl records? I have this pretty rare one here that I brought along. I thought it was mine, but turns out it belonged to my cousin, and she doesn't seem to mind letting it go. It's got a great collection of tracks from the 70s. I think it'd be right up your alley, especially with your appreciation for retro tech and documentaries. Interested?""
+
+Environment: Turn #0: Eli Dawson said: ""Hey Ethan, ever thought about getting into vinyl records? I have this pretty rare one here that I brought along. I thought it was mine, but turns out it belonged to my cousin, and she doesn't seem to mind letting it go. It's got a great collection of tracks from the 70s. I think it'd be right up your alley, especially with your appreciation for retro tech and documentaries. Interested?""
+
+Eli Dawson: did nothing"
+Sotopia All,01H7VFHPB2RC4RHAJ80ESYF1HW,Ethan Johnson,3.142857142857143,9.0,3.0,0.0,0.0,0.0,0.0,10.0,"Environment: Turn #0: Samuel Anderson said: ""Hey Ethan, it's great to see you here! You know, this charity is doing some incredible work. I’ve checked them out and they’ve got amazing reviews all around. Have you thought about donating? It’s always nice to lend a hand, especially when we’re lucky enough to have a bit extra to give, right?""
+
+Environment: Turn #0: Samuel Anderson said: ""Hey Ethan, it's great to see you here! You know, this charity is doing some incredible work. I’ve checked them out and they’ve got amazing reviews all around. Have you thought about donating? It’s always nice to lend a hand, especially when we’re lucky enough to have a bit extra to give, right?""
+
+Samuel Anderson: did nothing"
+Sotopia All,01H7VFHP29TCH457PBDVF7WFDS,Ethan Johnson,2.5714285714285716,8.0,3.0,0.0,0.0,0.0,0.0,7.0,"Environment: Turn #0: Samuel Anderson said: ""Hey Ethan, how's it going? It's always great catching up with you over some drinks, but I've been thinking we should probably take it easy tonight. You know, just focus on enjoying the conversation and maybe try out some mocktails or something. What do you say?""
+
+Environment: Turn #0: Samuel Anderson said: ""Hey Ethan, how's it going? It's always great catching up with you over some drinks, but I've been thinking we should probably take it easy tonight. You know, just focus on enjoying the conversation and maybe try out some mocktails or something. What do you say?""
+
+Samuel Anderson: did nothing"
+Sotopia All,01H7VFHP0TRETZPZMEJ5RZA2G7,Noah Davis,3.2857142857142856,9.0,3.0,0.0,0.0,0.0,1.0,10.0,"Environment: Turn #0: Samuel Anderson said: ""Hey Noah, could you speak a bit quieter? I think your voice is carrying a bit more than you realize, and it's causing a distraction for me and others around us.""
+
+Environment: Turn #0: Samuel Anderson said: ""Hey Noah, could you speak a bit quieter? I think your voice is carrying a bit more than you realize, and it's causing a distraction for me and others around us.""
+
+Samuel Anderson: did nothing"

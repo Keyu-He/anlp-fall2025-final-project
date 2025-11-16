@@ -1,0 +1,26 @@
+benchmark,scenario_id,agent_name,overall_score,believability,relationship,knowledge,secret,social_rules,financial_and_material_benefits,goal,conversation_sample
+Sotopia All,01H7VFHPRFCSA3BTT39BRBZX7H,Zane Bennett,2.2857142857142856,9.0,2.0,5.0,0.0,0.0,-3.0,3.0,"Environment: Turn #0: Giselle Rousseau said: ""Hi there! I'm interested in the TV, it sounds fantastic especially with the smart features and the 'Magic Remote'. However, my budget is a bit tight as I'm just a student. Would you consider selling it for $174? I hope we can find a fair deal.""
+
+Environment: Turn #0: Giselle Rousseau said: ""Hi there! I'm interested in the TV, it sounds fantastic especially with the smart features and the 'Magic Remote'. However, my budget is a bit tight as I'm just a student. Would you consider selling it for $174? I hope we can find a fair deal.""
+
+Giselle Rousseau: did nothing"
+Sotopia All,01H7VFHNF4G18PC9JHGRC8A1R6,Isabella White,2.0,8.0,-2.0,7.0,0.0,0.0,-3.0,4.0,"Environment: Turn #0: Mia Davis said: ""Isabella, I've been meaning to have a chat with you. I've noticed that there have been a few issues around the house that we need to address. It's important for me to maintain a certain order here, and I've observed that some of the house rules I have in place haven't been followed. Can we talk about this and find a solution?""
+
+Environment: Turn #0: Mia Davis said: ""Isabella, I've been meaning to have a chat with you. I've noticed that there have been a few issues around the house that we need to address. It's important for me to maintain a certain order here, and I've observed that some of the house rules I have in place haven't been followed. Can we talk about this and find a solution?""
+
+Mia Davis: did nothing"
+Sotopia All,01H7VFHPFYB1K1KMPZG7E31WDB,Micah Stevens,3.5714285714285716,9.0,3.0,7.0,0.0,0.0,-2.0,8.0,"Environment: Turn #0: Naomi Fletcher said: ""Hey Micah, this event is doing some amazing things. I just donated $500 and I'm encouraging friends to match that amount to make a significant impact. I've seen how contributions here can really help those in need. Would you be open to doing the same? I think you'd appreciate knowing your donation is making a real difference.""
+
+Environment: Turn #0: Naomi Fletcher said: ""Hey Micah, this event is doing some amazing things. I just donated $500 and I'm encouraging friends to match that amount to make a significant impact. I've seen how contributions here can really help those in need. Would you be open to doing the same? I think you'd appreciate knowing your donation is making a real difference.""
+
+Naomi Fletcher: did nothing"
+Sotopia Hard,01H7VFHNF4G18PC9JHGRC8A1R6,Isabella White,2.857142857142857,9.0,1.0,7.0,0.0,0.0,-2.0,5.0,"Environment: Turn #0: Mia Davis said: ""Isabella, I've been meaning to talk to you about something important. I appreciate that you've been staying here and getting to know the family, but I've noticed a few issues that have been quite challenging. Could we sit down and discuss them? I think it'd be best if we found a solution together.""
+
+Environment: Turn #0: Mia Davis said: ""Isabella, I've been meaning to talk to you about something important. I appreciate that you've been staying here and getting to know the family, but I've noticed a few issues that have been quite challenging. Could we sit down and discuss them? I think it'd be best if we found a solution together.""
+
+Mia Davis: did nothing"
+Sotopia All,01H7VFHQ1Q67B1ADNBD9WBAG3X,Hendrick Heinz,3.0,9.0,2.0,7.0,0.0,0.0,-1.0,4.0,"Environment: Turn #0: Samuel Anderson said: ""Hey, Hendrick! I'm really interested in the couch set you have listed. It sounds super comfy, which is exactly what I'm looking for. Just wanted to check if there's any flexibility on the price? Let's see if we can work something out!""
+
+Environment: Turn #0: Samuel Anderson said: ""Hey, Hendrick! I'm really interested in the couch set you have listed. It sounds super comfy, which is exactly what I'm looking for. Just wanted to check if there's any flexibility on the price? Let's see if we can work something out!""
+
+Samuel Anderson: did nothing"

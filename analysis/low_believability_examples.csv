@@ -1,0 +1,26 @@
+benchmark,scenario_id,agent_name,overall_score,believability,relationship,knowledge,secret,social_rules,financial_and_material_benefits,goal,conversation_sample
+Sotopia All,01H7VFHNR1RJKDZ9V9MDTJ1SJP,William Brown,3.4285714285714284,8.0,3.0,7.0,0.0,-2.0,0.0,8.0,"Environment: Turn #0: Mia Davis said: ""William, I noticed you were burning trash earlier. I understand it might seem like a quick way to get rid of it, but it's actually quite dangerous and could violate community rules. Burning trash can release harmful chemicals into the air, affecting our health and the environment. Plus, it could pose a fire hazard. I’m sure there are safer ways to handle your trash, and I'd be happy to help you find solutions.""
+
+Environment: Turn #0: Mia Davis said: ""William, I noticed you were burning trash earlier. I understand it might seem like a quick way to get rid of it, but it's actually quite dangerous and could violate community rules. Burning trash can release harmful chemicals into the air, affecting our health and the environment. Plus, it could pose a fire hazard. I’m sure there are safer ways to handle your trash, and I'd be happy to help you find solutions.""
+
+Mia Davis: did nothing"
+Sotopia All,01H7VFHN3Q7498S3R4R2VDSXA0,Baxter Sterling,1.2857142857142858,8.0,-1.0,2.0,-5.0,0.0,0.0,5.0,"Environment: Turn #0: Hendrick Heinz said: ""Hey Baxter, I've been thinking... If we both stick to our story and stay silent, we could get out of this with just a fine. It's risky to turn on each other, don't you think? We're both seasoned enough to know the consequences if we don't play this smart.""
+
+Environment: Turn #0: Hendrick Heinz said: ""Hey Baxter, I've been thinking... If we both stick to our story and stay silent, we could get out of this with just a fine. It's risky to turn on each other, don't you think? We're both seasoned enough to know the consequences if we don't play this smart.""
+
+Hendrick Heinz: did nothing"
+Sotopia All,01H7VFHNN7XTR99319DS8KZCQM,William Brown,3.4285714285714284,8.0,3.0,6.0,0.0,0.0,2.0,5.0,"Environment: Turn #0: Mia Davis said: ""Hey William, it's getting pretty cold out here. You know, it might be a good idea for us to share the blanket. It'll keep us both warm and comfortable through the night. What do you think?""
+
+Environment: Turn #0: Mia Davis said: ""Hey William, it's getting pretty cold out here. You know, it might be a good idea for us to share the blanket. It'll keep us both warm and comfortable through the night. What do you think?""
+
+Mia Davis: did nothing"
+Sotopia All,01H7VFHP29TCH457PBDVF7WFDS,Ethan Johnson,2.5714285714285716,8.0,3.0,0.0,0.0,0.0,0.0,7.0,"Environment: Turn #0: Samuel Anderson said: ""Hey Ethan, how's it going? It's always great catching up with you over some drinks, but I've been thinking we should probably take it easy tonight. You know, just focus on enjoying the conversation and maybe try out some mocktails or something. What do you say?""
+
+Environment: Turn #0: Samuel Anderson said: ""Hey Ethan, how's it going? It's always great catching up with you over some drinks, but I've been thinking we should probably take it easy tonight. You know, just focus on enjoying the conversation and maybe try out some mocktails or something. What do you say?""
+
+Samuel Anderson: did nothing"
+Sotopia All,01H7VFHP0AW0C23DV6ZG0B4HCE,Ethan Smith,3.7142857142857144,8.0,4.0,7.0,0.0,0.0,0.0,7.0,"Environment: Turn #0: Oliver Thompson said: ""Hey Ethan, you know sometimes drawing from a personal memory or thinking about a challenging moment can help unlock those emotions on stage. Do you have any memories that could help you connect to the scene?""
+
+Environment: Turn #0: Oliver Thompson said: ""Hey Ethan, you know sometimes drawing from a personal memory or thinking about a challenging moment can help unlock those emotions on stage. Do you have any memories that could help you connect to the scene?""
+
+Oliver Thompson: did nothing"
