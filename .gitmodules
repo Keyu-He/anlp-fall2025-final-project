@@ -1,3 +1,6 @@
 [submodule "sotopia"]
 	path = sotopia
 	url = https://github.com/sotopia-lab/sotopia.git
+[submodule "sotopia-rl"]
+	path = sotopia-rl
+	url = https://github.com/sotopia-lab/sotopia-rl.git
