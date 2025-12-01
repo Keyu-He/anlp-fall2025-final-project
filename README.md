@@ -10,7 +10,7 @@ git clone https://huggingface.co/andyrdt/saes-qwen2.5-7b-instruct
 ```bash
 cd ~/anlp-fall2025-final-project
 
-python -m inferences.qwen_sae_server \
+python -m inferences.qwen_sae_server_residual.py \
   --base-model-path <path-to-qwen2.5-7b-instruct> \
   --sae-root <path-to-sae-checkpoints> \
   --layer 15 \
