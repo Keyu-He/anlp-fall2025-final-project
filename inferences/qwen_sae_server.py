@@ -10,12 +10,12 @@ import torch
 from fastapi import FastAPI
 from pydantic import BaseModel
 from transformers import AutoModelForCausalLM, AutoTokenizer
+from dictionary_learning import utils as dl_utils
 
 from inferences.qwen_sae_inference import (
     attach_residual_hook,
     build_sae_dir,
     load_sae_checkpoint,
-    load_sae_config,
     prepare_sae,
     sae_encode,
 )
@@ -145,20 +145,27 @@ def build_app(
     sae_dir = build_sae_dir(sae_root, layer, trainer)
     print(f"Using SAE directory: {sae_dir}")
 
-    sae_cfg = load_sae_config(sae_dir)
-    if sae_cfg is not None:
-        trainer_cfg = sae_cfg.get("trainer", {})
+    # Load SAE metadata via dictionary_learning, as in the residual demo script.
+    print(f"Loading SAE dictionary from: {sae_dir}")
+    ae, sae_cfg = dl_utils.load_dictionary(sae_dir, device=device)
+    trainer_cfg = sae_cfg.get("trainer", {})
+    print(
+        "SAE config summary:",
+        {
+            "layer": trainer_cfg.get("layer"),
+            "activation_dim": trainer_cfg.get("activation_dim"),
+            "dict_size": trainer_cfg.get("dict_size"),
+            "k": trainer_cfg.get("k"),
+            "submodule_name": trainer_cfg.get("submodule_name"),
+        },
+    )
+    sae_layer = trainer_cfg.get("layer", None)
+    if sae_layer is not None and sae_layer != layer:
         print(
-            "SAE config summary:",
-            {
-                "layer": trainer_cfg.get("layer"),
-                "activation_dim": trainer_cfg.get("activation_dim"),
-                "dict_size": trainer_cfg.get("dict_size"),
-                "k": trainer_cfg.get("k"),
-                "submodule_name": trainer_cfg.get("submodule_name"),
-            },
+            f"[WARN] SAE trained on layer={sae_layer}, but --layer={layer}. "
+            f"Consider setting --layer={sae_layer} for best alignment."
         )
-        assert trainer_cfg.get("layer") == layer
+
     ckpt = load_sae_checkpoint(sae_dir, device)
     if ckpt is None:
         raise RuntimeError("SAE checkpoint ae.pt not found; cannot start server.")
