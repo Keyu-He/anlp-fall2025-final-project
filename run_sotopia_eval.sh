@@ -136,26 +136,26 @@ BATCH_SIZE=8
 
 cd sotopia
 
-# # ====== 先跑 SOTOPIA HARD ======
-# HARD_ENV_IDS_STR=$(printf '"%s",' "${HARD_ENV_IDS[@]}"); HARD_ENV_IDS_STR="[${HARD_ENV_IDS_STR%,}]"
-# export TAG="sotopia_hard_${MODEL_NAME_SAFE}"
-# timestamp="$(date +"%Y%m%d_%H%M%S")"
-# export SOTOPIA_REWARD_LOG="$SAVE_DIR/sotopia_hard_gpt-4o_${MODEL_NAME_SAFE}_${timestamp}.jsonl"
+# ====== 先跑 SOTOPIA HARD ======
+HARD_ENV_IDS_STR=$(printf '"%s",' "${HARD_ENV_IDS[@]}"); HARD_ENV_IDS_STR="[${HARD_ENV_IDS_STR%,}]"
+export TAG="sotopia_hard_${MODEL_NAME_SAFE}"
+timestamp="$(date +"%Y%m%d_%H%M%S")"
+export SOTOPIA_REWARD_LOG="$SAVE_DIR/sotopia_hard_gpt-4o_${MODEL_NAME_SAFE}_${timestamp}.jsonl"
 
-# python examples/experiment_eval.py \
-#   --gin_file sotopia_conf/generation_utils_conf/generate.gin \
-#   --gin_file sotopia_conf/server_conf/server.gin \
-#   --gin_file sotopia_conf/run_async_server_in_batch.gin \
-#   --gin.BATCH_SIZE=${BATCH_SIZE} \
-#   --gin.PUSH_TO_DB=False \
-#   --gin.PRINT_LOGS=True \
-#   --gin.VERBOSE=True \
-#   "--gin.SAVE_DIR='${SAVE_DIR}'" \
-#   --gin.ENV_IDS="${HARD_ENV_IDS_STR}" \
-#   "--gin.ENV_MODEL='${ENV_MODEL}'" \
-#   "--gin.AGENT1_MODEL='${AGENT1_MODEL}'" \
-#   "--gin.AGENT2_MODEL='${AGENT2_MODEL}'" \
-#   "--gin.TAG='${TAG}'"
+python examples/experiment_eval.py \
+  --gin_file sotopia_conf/generation_utils_conf/generate.gin \
+  --gin_file sotopia_conf/server_conf/server.gin \
+  --gin_file sotopia_conf/run_async_server_in_batch.gin \
+  --gin.BATCH_SIZE=${BATCH_SIZE} \
+  --gin.PUSH_TO_DB=False \
+  --gin.PRINT_LOGS=True \
+  --gin.VERBOSE=True \
+  "--gin.SAVE_DIR='${SAVE_DIR}'" \
+  --gin.ENV_IDS="${HARD_ENV_IDS_STR}" \
+  "--gin.ENV_MODEL='${ENV_MODEL}'" \
+  "--gin.AGENT1_MODEL='${AGENT1_MODEL}'" \
+  "--gin.AGENT2_MODEL='${AGENT2_MODEL}'" \
+  "--gin.TAG='${TAG}'"
 
 # ====== 再跑 SOTOPIA ALL ======
 ALL_ENV_IDS_STR=$(printf '"%s",' "${ALL_ENV_IDS[@]}"); ALL_ENV_IDS_STR="[${ALL_ENV_IDS_STR%,}]"
