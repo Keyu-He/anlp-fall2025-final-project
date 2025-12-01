@@ -5,6 +5,8 @@ from typing import Dict, Optional, Tuple
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
+from huggingface_hub import hf_hub_download
+from safetensors.torch import load_file as load_safetensors
 
 
 def parse_args() -> argparse.Namespace:
@@ -47,8 +49,26 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--device",
         type=str,
-        default="cuda",
-        help="Device for inference, e.g. 'cuda', 'cuda:0', or 'cpu'.",
+        default="cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu"),
+        help="Device for inference, e.g. 'cuda', 'mps', or 'cpu'.",
+    )
+    parser.add_argument(
+        "--sae-repo",
+        type=str,
+        default=None,
+        help="Hugging Face repo ID for the SAE (overrides --sae-root).",
+    )
+    parser.add_argument(
+        "--steer-feature",
+        type=int,
+        default=None,
+        help="SAE feature index to steer with (requires --sae-root or --sae-repo).",
+    )
+    parser.add_argument(
+        "--steer-strength",
+        type=float,
+        default=50.0,
+        help="Strength of the steering vector injection.",
     )
     return parser.parse_args()
 
@@ -88,6 +108,61 @@ def load_sae_checkpoint(sae_dir: str, device: str) -> Optional[Dict[str, torch.T
     return raw
 
 
+def load_sae_from_hub(repo_id: str, layer: int, trainer: int, device: str) -> Optional[Dict[str, torch.Tensor]]:
+    """
+    Attempt to load SAE checkpoint from Hugging Face Hub.
+    Tries 'ae.pt' first, then 'sae_weights.safetensors'.
+    """
+    # Try 1: Exact structure as local
+    subfolder = f"resid_post_layer_{layer}/trainer_{trainer}"
+    try:
+        ckpt_path = hf_hub_download(repo_id=repo_id, filename="ae.pt", subfolder=subfolder)
+        print(f"Downloaded SAE from {repo_id}/{subfolder}/ae.pt")
+        return torch.load(ckpt_path, map_location=device)
+    except Exception:
+        pass
+
+    # Try 2: Root ae.pt
+    try:
+        ckpt_path = hf_hub_download(repo_id=repo_id, filename="ae.pt")
+        print(f"Downloaded SAE from {repo_id}/ae.pt")
+        return torch.load(ckpt_path, map_location=device)
+    except Exception:
+        pass
+        
+    # Try 3: sae.safetensors (EleutherAI structure)
+    subfolder = f"layers.{layer}.mlp"
+    try:
+        ckpt_path = hf_hub_download(repo_id=repo_id, filename="sae.safetensors", subfolder=subfolder)
+        print(f"Downloaded SAE from {repo_id}/{subfolder}/sae.safetensors")
+        state_dict = load_safetensors(ckpt_path, device=device)
+        
+        # Map keys if needed
+        if "W_dec" in state_dict and "decoder.weight" not in state_dict:
+            # W_dec is [dict_size, d_model], but F.linear expects [out_features, in_features]
+            # i.e. [d_model, dict_size]. So we transpose.
+            state_dict["decoder.weight"] = state_dict.pop("W_dec").t()
+            
+        # Ensure all keys are present
+        required = ["encoder.weight", "encoder.bias", "decoder.weight", "b_dec"]
+        for r in required:
+            if r not in state_dict:
+                print(f"Warning: Missing key {r} in safetensors.")
+        
+        # Add dummy threshold/k if missing
+        if "threshold" not in state_dict:
+             state_dict["threshold"] = torch.tensor(0.0, device=device)
+        if "k" not in state_dict:
+             state_dict["k"] = 64 
+             
+        return state_dict
+    except Exception as e:
+        print(f"Failed to load safetensors from {subfolder}: {e}")
+
+    print(f"Could not find valid checkpoint in {repo_id}.")
+    return None
+
+
 def prepare_sae(ckpt: Dict[str, torch.Tensor], device: str) -> Dict[str, torch.Tensor]:
     """
     Prepare SAE weights for encoding/residual reconstruction.
@@ -100,7 +175,7 @@ def prepare_sae(ckpt: Dict[str, torch.Tensor], device: str) -> Dict[str, torch.T
 
     threshold = ckpt["threshold"]
     threshold_tensor = torch.as_tensor(threshold, device=sae_device, dtype=encoder_weight.dtype)
-    k = int(ckpt["k"])
+    k = int(ckpt.get("k", 32))
 
     return {
         "encoder_weight": encoder_weight,
@@ -118,12 +193,65 @@ def attach_residual_hook(model, layer_index: int, storage: Dict[str, torch.Tenso
     the post-residual activations.
     """
     try:
-        layer_module = model.model.layers[layer_index]
+        # SAE is likely trained on MLP output
+        layer_module = model.model.layers[layer_index].mlp
     except (AttributeError, IndexError) as exc:
-        raise ValueError(f"Cannot access model.model.layers[{layer_index}]") from exc
+        raise ValueError(f"Cannot access model.model.layers[{layer_index}].mlp") from exc
 
     def hook(_module, _inputs, output):
         storage["resid_post"] = output.detach().to("cpu")
+
+    handle = layer_module.register_forward_hook(hook)
+    return handle
+
+
+def attach_steering_hook(
+    model,
+    layer_index: int,
+    sae: Dict[str, torch.Tensor],
+    feature_index: int,
+    strength: float,
+):
+    """
+    Register a forward hook that adds the decoder vector of the specified
+    SAE feature to the residual stream.
+    """
+    try:
+        # SAE is likely trained on MLP output
+        layer_module = model.model.layers[layer_index].mlp
+    except (AttributeError, IndexError) as exc:
+        raise ValueError(f"Cannot access model.model.layers[{layer_index}].mlp") from exc
+
+    # Extract the steering vector: [d_model]
+    # decoder_weight shape is [dict_size, d_model]
+    # Wait, if we loaded from safetensors and transposed, it is [d_model, dict_size].
+    # But if we loaded from pt, it is [dict_size, d_model].
+    # We need to be careful.
+    # Let's check shape.
+    decoder_weight = sae["decoder_weight"]
+    
+    # Standard SAE shape usually [dict_size, d_model].
+    # If we transposed it for F.linear, it is [d_model, dict_size].
+    # F.linear(x, weight) -> x @ weight.T
+    # If weight is [d_model, dict_size], weight.T is [dict_size, d_model].
+    # x is [..., dict_size].
+    # x @ [dict_size, d_model] -> [..., d_model]. Correct.
+    
+    # So if we transposed, decoder_weight is [d_model, dict_size].
+    # feature_index selects a column if it is [d_model, dict_size].
+    # If it is [dict_size, d_model], it selects a row.
+    
+    # Heuristic: dict_size is usually >> d_model (e.g. 65k vs 1.5k).
+    if decoder_weight.shape[0] > decoder_weight.shape[1]:
+        # Shape is [dict_size, d_model]
+        steering_vector = decoder_weight[feature_index].clone().detach()
+    else:
+        # Shape is [d_model, dict_size]
+        steering_vector = decoder_weight[:, feature_index].clone().detach()
+    
+    def hook(_module, _inputs, output):
+        vec = steering_vector.to(output.device)
+        return output + (vec * strength)
 
     handle = layer_module.register_forward_hook(hook)
     return handle
@@ -199,33 +327,79 @@ def main() -> None:
     )
     model.eval()
 
-    sae_dir = build_sae_dir(args.sae_root, args.layer, args.trainer)
-    print(f"Using SAE directory: {sae_dir}")
+    if args.sae_repo:
+        print(f"Loading SAE from Hugging Face Hub: {args.sae_repo}")
+        ckpt = load_sae_from_hub(args.sae_repo, args.layer, args.trainer, args.device)
+        if ckpt is None:
+             print("Failed to load SAE from Hub.")
+             sae = None
+        else:
+             sae = prepare_sae(ckpt, args.device)
+    else:
+        sae_dir = build_sae_dir(args.sae_root, args.layer, args.trainer)
+        print(f"Using SAE directory: {sae_dir}")
 
-    sae_cfg = load_sae_config(sae_dir)
-    if sae_cfg is not None:
-        trainer_cfg = sae_cfg.get("trainer", {})
-        print(
-            "SAE config summary:",
-            {
-                "layer": trainer_cfg.get("layer"),
-                "activation_dim": trainer_cfg.get("activation_dim"),
-                "dict_size": trainer_cfg.get("dict_size"),
-                "k": trainer_cfg.get("k"),
-                "submodule_name": trainer_cfg.get("submodule_name"),
-            },
+        sae_cfg = load_sae_config(sae_dir)
+        if sae_cfg is not None:
+            trainer_cfg = sae_cfg.get("trainer", {})
+            print(
+                "SAE config summary:",
+                {
+                    "layer": trainer_cfg.get("layer"),
+                    "activation_dim": trainer_cfg.get("activation_dim"),
+                    "dict_size": trainer_cfg.get("dict_size"),
+                    "k": trainer_cfg.get("k"),
+                    "submodule_name": trainer_cfg.get("submodule_name"),
+                },
+            )
+        else:
+            print("Warning: SAE config.json not found; continuing without config metadata.")
+
+        ckpt = load_sae_checkpoint(sae_dir, args.device)
+        if ckpt is None:
+            print("Warning: SAE checkpoint ae.pt not found; will only capture activations.")
+            sae = None
+        else:
+            top_keys = list(ckpt.keys())
+            print("Loaded SAE checkpoint (dict), top-level keys:", top_keys[:10])
+            sae = prepare_sae(ckpt, args.device)
+
+    # If steering is requested, run generation with the hook
+    if args.steer_feature is not None:
+        if sae is None:
+            raise ValueError("Steering requires a loaded SAE. Check --sae-root or --sae-repo.")
+        
+        print(f"--- Enabling Steering: Feature {args.steer_feature}, Strength {args.steer_strength} ---")
+        handle = attach_steering_hook(
+            model, 
+            args.layer, 
+            sae, 
+            args.steer_feature, 
+            args.steer_strength
         )
-    else:
-        print("Warning: SAE config.json not found; continuing without config metadata.")
-
-    ckpt = load_sae_checkpoint(sae_dir, args.device)
-    if ckpt is None:
-        print("Warning: SAE checkpoint ae.pt not found; will only capture activations.")
-        sae = None
-    else:
-        top_keys = list(ckpt.keys())
-        print("Loaded SAE checkpoint (dict), top-level keys:", top_keys[:10])
-        sae = prepare_sae(ckpt, args.device)
+        
+        # Prepare inputs for generation
+        inputs = tokenizer(args.text, return_tensors="pt")
+        inputs = {k: v.to(args.device) for k, v in inputs.items()}
+        
+        print(f"Prompt: {args.text}")
+        print("Generating...")
+        
+        with torch.no_grad():
+            generated_ids = model.generate(
+                **inputs, 
+                max_new_tokens=64, 
+                do_sample=True, 
+                temperature=0.7
+            )
+        
+        output_text = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
+        print("--- Generated Output ---")
+        print(output_text)
+        print("------------------------")
+        
+        handle.remove()
+        return
 
     activations: Dict[str, torch.Tensor] = {}
     handle = attach_residual_hook(model, args.layer, activations)
