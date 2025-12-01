@@ -133,12 +133,14 @@ def sae_encode(
     resid: torch.Tensor,
     sae: Dict[str, torch.Tensor],
     topn: int = 50,
-) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, float, float]:
     """
     Encode residual activations using the SAE and return:
       - feats_mean: mean activation over batch and sequence [dict_size]
       - top_indices: indices of topn features [topn]
       - top_values: values of topn features [topn]
+      - recon_error: L2 reconstruction error ||x - x_hat||_2
+      - relative_error: recon_error / ||x||_2 (or 0.0 if ||x|| is 0)
     """
     encoder_weight = sae["encoder_weight"]
     encoder_bias = sae["encoder_bias"]
@@ -148,7 +150,7 @@ def sae_encode(
     k = int(sae["k"])
 
     device = encoder_weight.device
-    x = resid.to(device)
+    x = resid.to(device=device, dtype=encoder_weight.dtype)
 
     pre = torch.nn.functional.linear(x, encoder_weight, encoder_bias)
 
@@ -165,14 +167,23 @@ def sae_encode(
         mask.scatter_(-1, indices, True)
         acts = acts * mask
 
-    _ = torch.nn.functional.linear(acts, decoder_weight, decoder_bias)
+    recon = torch.nn.functional.linear(acts, decoder_weight, decoder_bias)
+
+    # Reconstruction error statistics
+    # x and recon are [batch, seq, d]; flatten over batch+seq
+    x_flat = x.reshape(-1, x.shape[-1])
+    recon_flat = recon.reshape_as(x_flat)
+    diff = x_flat - recon_flat
+    recon_error = float(torch.linalg.norm(diff).item())
+    x_norm = float(torch.linalg.norm(x_flat).item())
+    relative_error = recon_error / x_norm if x_norm > 0 else 0.0
 
     feats_mean = acts.mean(dim=(0, 1))
 
     topn_eff = min(topn, feats_mean.shape[0])
     top_values, top_indices = torch.topk(feats_mean, topn_eff)
 
-    return feats_mean, top_indices, top_values
+    return feats_mean, top_indices, top_values, recon_error, relative_error
 
 
 def main() -> None:
@@ -237,12 +248,14 @@ def main() -> None:
     print(f"Captured residual activations at layer {args.layer}: shape={tuple(resid.shape)}")
 
     if sae is not None:
-        feats_mean, top_indices, top_values = sae_encode(resid, sae)
+        feats_mean, top_indices, top_values, recon_error, relative_error = sae_encode(
+            resid, sae
+        )
         print(f"Mean SAE feature vector shape: {tuple(feats_mean.shape)}")
         print("Top SAE feature indices:", top_indices.tolist())
         print("Top SAE feature values:", top_values.tolist())
+        print(f"Reconstruction error: {recon_error:.6f} (relative {relative_error:.6f})")
 
 
 if __name__ == "__main__":
     main()
-

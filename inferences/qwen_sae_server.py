@@ -1,5 +1,7 @@
 import argparse
+import hashlib
 import json
+import re
 import threading
 import time
 from typing import Any, Dict, List, Optional
@@ -183,6 +185,15 @@ def build_app(
             raise ValueError("Empty messages in chat completion request.")
         prompt = req.messages[-1].content
 
+        # Derive a deterministic utterance key and ID from the prompt text.
+        # We use the last 'Turn #x: ...' line if present; otherwise the last 200 chars.
+        turn_matches = re.findall(r"Turn #\d+:[^\n]*", prompt)
+        if turn_matches:
+            utterance_key = turn_matches[-1]
+        else:
+            utterance_key = prompt[-200:]
+        utterance_id = hashlib.sha1(utterance_key.encode("utf-8")).hexdigest()[:16]
+
         with generation_lock:
             request_counter["value"] += 1
             request_index = request_counter["value"]
@@ -200,16 +211,28 @@ def build_app(
             handle.remove()
 
             resid = activations.get("resid_post")
+            sae_features: List[float] = []
             sae_top_indices: List[int] = []
             sae_top_values: List[float] = []
+            sae_recon_error: Optional[float] = None
+            sae_relative_error: Optional[float] = None
             if resid is not None:
-                feats_mean, top_indices, top_values = sae_encode(
+                (
+                    feats_mean,
+                    top_indices,
+                    top_values,
+                    recon_error,
+                    relative_error,
+                ) = sae_encode(
                     resid,
                     sae,
                     topn=topn,
                 )
+                sae_features = [float(v) for v in feats_mean.cpu().tolist()]
                 sae_top_indices = top_indices.cpu().tolist()
                 sae_top_values = [float(v) for v in top_values.cpu().tolist()]
+                sae_recon_error = recon_error
+                sae_relative_error = relative_error
 
             # 2) Generate a completion with the same prompt
             max_new_tokens = req.max_tokens or 512
@@ -253,6 +276,8 @@ def build_app(
             log_record(
                 {
                     "request_index": request_index,
+                    "utterance_id": utterance_id,
+                    "utterance_key": utterance_key,
                     "model": req.model,
                     "sae_layer": layer,
                     "sae_trainer": trainer,
@@ -260,10 +285,13 @@ def build_app(
                     "completion": completion_text,
                     "action_type": action_type,
                     "argument": argument,
+                     "sae_features": sae_features,
                     "temperature": temperature,
                     "max_new_tokens": max_new_tokens,
                     "sae_top_feature_indices": sae_top_indices,
                     "sae_top_feature_values": sae_top_values,
+                    "sae_recon_error": sae_recon_error,
+                    "sae_relative_error": sae_relative_error,
                     "prompt_tokens": prompt_tokens,
                     "completion_tokens": completion_tokens,
                 }
