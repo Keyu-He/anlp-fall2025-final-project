@@ -118,6 +118,9 @@ ipython_config.py
 #pdm.lock
 #pdm.toml
 .pdm-python
+
+# Large SAE logs
+results/sae/
 .pdm-build/
 
 # pixi
