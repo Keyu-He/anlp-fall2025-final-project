@@ -5,9 +5,11 @@
 import argparse
 import hashlib
 import json
+import os
 import re
 import threading
 import time
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import torch
@@ -282,6 +284,17 @@ def main():
     parser.add_argument("--port", type=int, default=8000)
     args = parser.parse_args()
 
+    # Automatically append a timestamp to the log path so that
+    # multiple runs do not overwrite the same log file.
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_path = args.log_path
+    # If the user provides a {timestamp} placeholder, respect it.
+    if "{timestamp}" in log_path:
+        log_path = log_path.format(timestamp=ts)
+    else:
+        base, ext = os.path.splitext(log_path)
+        log_path = f"{base}_{ts}{ext}"
+
     app = build_app(
         base_model_path=args.base_model_path,
         sae_root=args.sae_root,
@@ -289,7 +302,7 @@ def main():
         trainer=args.trainer,
         device=args.device,
         topn=args.topn,
-        log_path=args.log_path,
+        log_path=log_path,
         run_id=args.run_id,
     )
 
