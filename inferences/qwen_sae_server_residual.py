@@ -42,6 +42,41 @@ def attach_resid_post_hook(model, layer_index: int, storage: Dict[str, torch.Ten
     return layer_module.mlp.register_forward_hook(hook)
 
 
+def attach_steering_hook(model, layer_index: int, ae, feature_idx: int, steering_strength: float):
+    """Hook that steers a specific SAE feature during generation."""
+    layer_module = model.model.layers[layer_index]
+    if not hasattr(layer_module, "mlp"):
+        raise ValueError(f"Layer {layer_index} has no MLP, cannot hook resid_post")
+
+    def intervention_hook(_module, inputs, output):
+        pre_mlp = inputs[0]
+        mlp_out = output
+        resid_post = pre_mlp + mlp_out
+
+        # Save original dtype
+        original_dtype = resid_post.dtype
+        batch_size, seq_len, d_model = resid_post.shape
+
+        # Encode with SAE (need float32)
+        resid_flat = resid_post.view(-1, d_model).to(dtype=torch.float32)
+        reconstructed, features = ae(resid_flat, output_features=True)
+
+        # Steer the target feature
+        features[:, feature_idx] += steering_strength
+
+        # Decode back
+        steered_resid = ae.decode(features)
+        steered_resid = steered_resid.view(batch_size, seq_len, d_model)
+
+        # Convert back to original dtype (bfloat16)
+        steered_resid = steered_resid.to(dtype=original_dtype)
+
+        # Return modified MLP output
+        return steered_resid - pre_mlp
+
+    return layer_module.mlp.register_forward_hook(intervention_hook)
+
+
 ###############################################################
 # Request/Response Models
 ###############################################################
@@ -90,6 +125,8 @@ def build_app(
     topn: int,
     log_path: str,
     run_id: str,
+    steer_feature_idx: Optional[int] = None,
+    steer_strength: float = 0.0,
 ) -> FastAPI:
 
     print(f"Loading tokenizer and model from: {base_model_path}")
@@ -152,10 +189,17 @@ def build_app(
             request_idx = counter["value"]
 
             #################################################
-            # Step 1 — Forward pass to capture resid_post
+            # Step 1 — Forward pass to capture resid_post / Apply Steering
             #################################################
             activations: Dict[str, torch.Tensor] = {}
-            hook = attach_resid_post_hook(model, layer, activations)
+            hook = None
+            
+            if steer_feature_idx is not None and abs(steer_strength) > 1e-6:
+                # Steering Mode
+                hook = attach_steering_hook(model, layer, ae, steer_feature_idx, steer_strength)
+            else:
+                # Logging Mode (capture residuals)
+                hook = attach_resid_post_hook(model, layer, activations)
 
             encoded = tokenizer(prompt, return_tensors="pt")
             encoded = {k: v.to(device) for k, v in encoded.items()}
@@ -163,7 +207,8 @@ def build_app(
             with torch.no_grad():
                 _ = model(**encoded)
 
-            hook.remove()
+            if hook:
+                hook.remove()
 
             sae_top_idx = []
             sae_top_values = []
@@ -282,6 +327,8 @@ def main():
     parser.add_argument("--run-id", type=str, default="")
     parser.add_argument("--host", type=str, default="0.0.0.0")
     parser.add_argument("--port", type=int, default=8000)
+    parser.add_argument("--steer-feature-idx", type=int, default=None, help="SAE feature index to steer")
+    parser.add_argument("--steer-strength", type=float, default=0.0, help="Steering strength")
     args = parser.parse_args()
 
     # Automatically append a timestamp to the log path so that
@@ -304,6 +351,8 @@ def main():
         topn=args.topn,
         log_path=log_path,
         run_id=args.run_id,
+        steer_feature_idx=args.steer_feature_idx,
+        steer_strength=args.steer_strength,
     )
 
     import uvicorn

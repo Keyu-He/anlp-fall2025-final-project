@@ -31,11 +31,33 @@ def parse_args():
     parser.add_argument(
         "--text",
         type=str,
-        default="The goal of the game is to",
-        help="Input prompt",
+        default=None,
+        help="Input prompt (overrides scenario)",
     )
-    parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
+    parser.add_argument(
+        "--scenario",
+        type=str,
+        default="burning_trash",
+        choices=["burning_trash", "borrow_money", "project_deadline", "custom"],
+        help="Preset scenario to use",
+    )
+    parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu"))
     return parser.parse_args()
+
+SCENARIOS = {
+    "burning_trash": """Scenario: Mia Davis noticed William Brown burning trash, which violates community rules and is dangerous. Mia confronts William about it.
+Participants: Mia Davis and William Brown
+Mia Davis: "William, I noticed you were burning trash earlier. I understand it might seem like a quick way to get rid of it, but it's actually quite dangerous and could violate community rules. Burning trash can release harmful chemicals into the air, affecting our health and the environment. Plus, it could pose a fire hazard. I’m sure there are safer ways to handle your trash, and I'd be happy to help you find solutions."
+William Brown:""",
+    "borrow_money": """Scenario: Alex needs to borrow money from their friend Jordan to pay rent, but Jordan has been hesitant to lend money in the past.
+Participants: Alex and Jordan
+Alex: "Hey Jordan, I know things have been tight lately, but I'm in a really tough spot with rent this month. I was wondering if you could possibly lend me $200? I promise to pay you back as soon as I get my paycheck next week."
+Jordan:""",
+    "project_deadline": """Scenario: Sarah and Mike are working on a group project. Mike hasn't done his part, and the deadline is tomorrow. Sarah is frustrated.
+Participants: Sarah and Mike
+Sarah: "Mike, we need to talk. The project is due tomorrow, and I haven't seen any of your contributions yet. I've done my part, but we can't submit it like this. What's going on?"
+Mike:"""
+}
 
 def get_sae_dir(sae_dir_arg):
     if sae_dir_arg is not None and os.path.exists(sae_dir_arg):
@@ -103,21 +125,29 @@ def main():
     print(f"Loading SAE from {sae_dir}...")
     ae, _ = dl_utils.load_dictionary(sae_dir, device=args.device)
 
-    inputs = tokenizer(args.text, return_tensors="pt").to(args.device)
+    if args.text:
+        prompt = args.text
+    elif args.scenario in SCENARIOS:
+        prompt = SCENARIOS[args.scenario]
+    else:
+        prompt = "The goal of the game is to"
+
+    print(f"\nPrompt:\n{prompt}\n")
+    inputs = tokenizer(prompt, return_tensors="pt").to(args.device)
 
     # Baseline
     print("\n--- Baseline Generation ---")
     with torch.no_grad():
-        outputs = model.generate(**inputs, max_new_tokens=64, do_sample=False)
-    print(tokenizer.decode(outputs[0], skip_special_tokens=True))
+        outputs = model.generate(**inputs, max_new_tokens=128, do_sample=False)
+    print(tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True))
 
     # Steered
     print(f"\n--- Steered Generation (Feature {args.feature_idx}) ---")
     hook = attach_steering_hook(model, args.layer, ae, args.feature_idx, args.steering_strength)
     with torch.no_grad():
-        outputs = model.generate(**inputs, max_new_tokens=64, do_sample=False)
+        outputs = model.generate(**inputs, max_new_tokens=128, do_sample=False)
     hook.remove()
-    print(tokenizer.decode(outputs[0], skip_special_tokens=True))
+    print(tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True))
 
 if __name__ == "__main__":
     main()
