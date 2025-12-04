@@ -56,6 +56,12 @@ def parse_args():
         choices=list(SCENARIOS.keys()) + ["all"],
         help="Scenarios to run",
     )
+    parser.add_argument(
+        "--output-dir",
+        type=str,
+        default="results/interpretation",
+        help="Directory to save results",
+    )
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "mps"if torch.backends.mps.is_available() else "cpu")
     return parser.parse_args()
 
@@ -162,21 +168,38 @@ def main():
         all_results[scenario_key] = scenario_results
         
     # Automated Interpretation
-    interpret_results(args.feature_idx, all_results)
+    interpretation = interpret_results(args.feature_idx, all_results)
+    
+    # Save results
+    if args.output_dir:
+        os.makedirs(args.output_dir, exist_ok=True)
+        output_path = os.path.join(args.output_dir, f"feature_{args.feature_idx}_interpretation.json")
+        
+        output_data = {
+            "feature_idx": args.feature_idx,
+            "scenarios": all_results,
+            "interpretation": interpretation
+        }
+        
+        import json
+        with open(output_path, "w") as f:
+            json.dump(output_data, f, indent=2)
+        print(f"Results saved to {output_path}")
 
 def interpret_results(feature_idx, all_results):
     """
     Uses an LLM to interpret the feature based on generation differences across multiple scenarios.
+    Returns the interpretation string.
     """
     try:
         from openai import OpenAI
         client = OpenAI()
     except ImportError:
         print("OpenAI library not installed. Skipping automated interpretation.")
-        return
+        return None
     except Exception as e:
         print(f"Could not initialize OpenAI client: {e}. Skipping automated interpretation.")
-        return
+        return None
 
     prompt = f"""
 You are an expert in interpreting Sparse Autoencoder (SAE) features in Language Models.
@@ -218,12 +241,13 @@ Provide a concise title (3-5 words) and a brief explanation that fits ALL scenar
 """
     
     print(f"\n{'='*40}")
-    print("AUTOMATED INTERPRETATION (GPT-4o)")
+    print("AUTOMATED INTERPRETATION (GPT-5)")
     print(f"{'='*40}")
     
+    interpretation = None
     try:
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-5",
             messages=[
                 {"role": "system", "content": "You are a helpful interpretability assistant."},
                 {"role": "user", "content": prompt}
@@ -237,6 +261,8 @@ Provide a concise title (3-5 words) and a brief explanation that fits ALL scenar
         print(f"Error during API call: {e}")
         print("Prompt that would have been sent:")
         print(prompt)
+        
+    return interpretation
 
 if __name__ == "__main__":
     main()
