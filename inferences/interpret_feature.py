@@ -163,7 +163,7 @@ def main():
         if args.output_dir:
             output_path = os.path.join(args.output_dir, f"feature_{feature_idx}_interpretation.json")
             if os.path.exists(output_path):
-                # print(f"Skipping Feature {feature_idx}, result already exists at {output_path}")
+                print(f"Skipping Feature {feature_idx}, result already exists at {output_path}")
                 continue
 
         all_results = {}
