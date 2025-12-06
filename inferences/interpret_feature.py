@@ -63,6 +63,7 @@ def parse_args():
         default="results/interpretation",
         help="Directory to save results",
     )
+    parser.add_argument("--max-new-tokens", type=int, default=256, help="Max new tokens to generate")
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
     return parser.parse_args()
 
@@ -138,7 +139,7 @@ def main():
     model = AutoModelForCausalLM.from_pretrained(
         args.base_model_path,
         trust_remote_code=True,
-        torch_dtype=torch.bfloat16,
+        torch_dtype=torch.bfloat16 if "cuda" in args.device else torch.float32,
         device_map=args.device,
     )
     model.eval()
@@ -154,14 +155,15 @@ def main():
     if args.output_dir:
         os.makedirs(args.output_dir, exist_ok=True)
 
-    for i, feature_idx in enumerate(feature_indices):
-        print(f"\n[{i+1}/{len(feature_indices)}] Processing Feature {feature_idx}...")
+    from tqdm import tqdm
+    for i, feature_idx in enumerate(tqdm(feature_indices, desc="Features")):
+        # print(f"\n[{i+1}/{len(feature_indices)}] Processing Feature {feature_idx}...")
         
         # Check if already done
         if args.output_dir:
             output_path = os.path.join(args.output_dir, f"feature_{feature_idx}_interpretation.json")
             if os.path.exists(output_path):
-                print(f"Skipping Feature {feature_idx}, result already exists at {output_path}")
+                # print(f"Skipping Feature {feature_idx}, result already exists at {output_path}")
                 continue
 
         all_results = {}
@@ -169,21 +171,26 @@ def main():
         for scenario_key in scenarios_to_run:
             prompt = SCENARIOS[scenario_key]
             inputs = tokenizer(prompt, return_tensors="pt").to(args.device)
+            # print(f"  Scenario: {scenario_key}")
             
             scenario_results = {}
             
             for strength in args.strengths:
+                # print(f"    Strength {strength}: Generating...", end="", flush=True)
                 hook = None
                 if abs(strength) > 1e-6:
                     hook = attach_steering_hook(model, args.layer, ae, feature_idx, strength)
                 
                 with torch.no_grad():
-                    outputs = model.generate(**inputs, max_new_tokens=1024, do_sample=False)
+                    outputs = model.generate(**inputs, max_new_tokens=args.max_new_tokens, do_sample=False)
                 
                 if hook:
                     hook.remove()
                     
                 generated = tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
+                print(f" Done ({len(generated)} chars)")
+                # Print full output for validation
+                print(f"      -> {generated}")
                 scenario_results[strength] = generated
             
             all_results[scenario_key] = scenario_results
