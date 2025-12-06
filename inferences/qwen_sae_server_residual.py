@@ -10,7 +10,7 @@ import re
 import threading
 import time
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import torch
 from fastapi import FastAPI
@@ -24,6 +24,24 @@ from dictionary_learning import utils as dl_utils
 ###############################################################
 # Residual Hook (Correct resid_post)
 ###############################################################
+
+
+def parse_feature_from_model_name(model_name: str) -> Tuple[Optional[int], Optional[float]]:
+    """
+    Parse steering config from the model name string.
+
+    Expected pattern (anywhere in the string):
+        __feat{idx}_str{strength}
+
+    Example:
+        custom/Qwen/Qwen2.5-7B-Instruct__feat123_str5.0
+    """
+    m = re.search(r"__feat(-?\\d+)_str(-?\\d+(?:\\.\\d+)?)", model_name)
+    if not m:
+        return None, None
+    feat_idx = int(m.group(1))
+    strength = float(m.group(2))
+    return feat_idx, strength
 
 def attach_resid_post_hook(model, layer_index: int, storage: Dict[str, torch.Tensor]):
     """Correct hook for Qwen2.5 resid_post_layer_{L}:
@@ -193,10 +211,22 @@ def build_app(
             #################################################
             activations: Dict[str, torch.Tensor] = {}
             hook = None
-            
-            if steer_feature_idx is not None and abs(steer_strength) > 1e-6:
+
+            # Allow per-request overrides encoded in `req.model`, so that
+            # a remote client (e.g., local Sotopia eval) can select different
+            # SAE features/strengths without restarting the server.
+            feature_idx = steer_feature_idx
+            strength = steer_strength
+            if req.model:
+                parsed_idx, parsed_strength = parse_feature_from_model_name(req.model)
+                if parsed_idx is not None:
+                    feature_idx = parsed_idx
+                if parsed_strength is not None:
+                    strength = parsed_strength
+
+            if feature_idx is not None and abs(strength) > 1e-6:
                 # Steering Mode
-                hook = attach_steering_hook(model, layer, ae, steer_feature_idx, steer_strength)
+                hook = attach_steering_hook(model, layer, ae, feature_idx, strength)
             else:
                 # Logging Mode (capture residuals)
                 hook = attach_resid_post_hook(model, layer, activations)
@@ -271,6 +301,8 @@ def build_app(
                     "utterance_id": utterance_id,
                     "utterance_key": utterance_key,
                     "model": req.model,
+                    "steer_feature_idx": feature_idx,
+                    "steer_strength": strength,
                     "prompt": prompt,
                     "completion": completion,
                     "sae_layer": layer,
