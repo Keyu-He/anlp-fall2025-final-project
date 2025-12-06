@@ -36,23 +36,24 @@ def parse_args():
     parser.add_argument(
         "--sae-dir",
         type=str,
-        default=None,
-        help="Path to SAE directory. If None, downloads from HF.",
+        default="/data/user_data/keyuhe/qwen2.5-7b-sotopia/saes-qwen2.5-7b-instruct/resid_post_layer_15/trainer_1",
+        help="Path to SAE directory. If path doesn't exist, downloads from HF.",
     )
     parser.add_argument("--layer", type=int, default=15)
-    parser.add_argument("--feature-idx", type=int, required=True)
+    parser.add_argument("--feature-idx", type=int, default=None, help="Single feature index to interpret")
+    parser.add_argument("--feature-indices-file", type=str, default=None, help="Path to text file with feature indices (one per line)")
     parser.add_argument(
         "--strengths",
         type=float,
         nargs="+",
         default=[-10.0, -5.0, 0.0, 5.0, 10.0],
-        help="List of steering strengths to test (e.g. -10 0 10)",
+        help="List of steering strengths to test (e.g. -10 -5 0 5 10)",
     )
     parser.add_argument(
         "--scenarios",
         type=str,
         nargs="+",
-        default=["burning_trash"],
+        default=["burning_trash", "borrow_money", "project_deadline"],
         choices=list(SCENARIOS.keys()) + ["all"],
         help="Scenarios to run",
     )
@@ -62,7 +63,7 @@ def parse_args():
         default="results/interpretation",
         help="Directory to save results",
     )
-    parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "mps"if torch.backends.mps.is_available() else "cpu")
+    parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
     return parser.parse_args()
 
 def get_sae_dir(sae_dir_arg):
@@ -108,6 +109,27 @@ def attach_steering_hook(model, layer_index, ae, feature_idx, steering_strength)
 def main():
     args = parse_args()
     
+    # Determine features to run
+    feature_indices = []
+    if args.feature_idx is not None:
+        feature_indices.append(args.feature_idx)
+    
+    if args.feature_indices_file:
+        if os.path.exists(args.feature_indices_file):
+            with open(args.feature_indices_file, 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    if line and line.isdigit():
+                        feature_indices.append(int(line))
+        else:
+            print(f"Warning: Feature file {args.feature_indices_file} not found.")
+
+    if not feature_indices:
+        print("No features specified. Use --feature-idx or --feature-indices-file.")
+        return
+
+    print(f"Total features to process: {len(feature_indices)}")
+
     sae_dir = get_sae_dir(args.sae_dir)
     print(f"Using SAE directory: {sae_dir}")
     
@@ -116,7 +138,7 @@ def main():
     model = AutoModelForCausalLM.from_pretrained(
         args.base_model_path,
         trust_remote_code=True,
-        torch_dtype=torch.bfloat16 if "cuda" in args.device else torch.float32,
+        torch_dtype=torch.bfloat16,
         device_map=args.device,
     )
     model.eval()
@@ -128,68 +150,68 @@ def main():
     if "all" in scenarios_to_run:
         scenarios_to_run = list(SCENARIOS.keys())
 
-    print(f"\n{'='*80}")
-    print(f"INTERPRETING FEATURE {args.feature_idx}")
-    print(f"{'='*80}\n")
-    
-    all_results = {}
-
-    for scenario_key in scenarios_to_run:
-        prompt = SCENARIOS[scenario_key]
-        print(f"Scenario: {scenario_key}")
-        print(f"Prompt: {prompt[:100]}...\n")
-        
-        inputs = tokenizer(prompt, return_tensors="pt").to(args.device)
-        
-        scenario_results = {}
-        
-        for strength in args.strengths:
-            label = f"Strength {strength}"
-            if strength == 0:
-                label += " (Baseline)"
-            
-            print(f"--- {label} ---")
-            
-            hook = None
-            if abs(strength) > 1e-6:
-                hook = attach_steering_hook(model, args.layer, ae, args.feature_idx, strength)
-            
-            with torch.no_grad():
-                outputs = model.generate(**inputs, max_new_tokens=128, do_sample=False)
-            
-            if hook:
-                hook.remove()
-                
-            generated = tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
-            print(f"{generated}\n")
-            scenario_results[strength] = generated
-        
-        print(f"{'-'*80}\n")
-        all_results[scenario_key] = scenario_results
-        
-    # Automated Interpretation
-    interpretation = interpret_results(args.feature_idx, all_results)
-    
-    # Save results
+    # Create output directory
     if args.output_dir:
         os.makedirs(args.output_dir, exist_ok=True)
-        output_path = os.path.join(args.output_dir, f"feature_{args.feature_idx}_interpretation.json")
+
+    for i, feature_idx in enumerate(feature_indices):
+        print(f"\n[{i+1}/{len(feature_indices)}] Processing Feature {feature_idx}...")
         
-        output_data = {
-            "feature_idx": args.feature_idx,
-            "scenarios": all_results,
-            "interpretation": interpretation
-        }
+        # Check if already done
+        if args.output_dir:
+            output_path = os.path.join(args.output_dir, f"feature_{feature_idx}_interpretation.json")
+            if os.path.exists(output_path):
+                print(f"Skipping Feature {feature_idx}, result already exists at {output_path}")
+                continue
+
+        all_results = {}
+
+        for scenario_key in scenarios_to_run:
+            prompt = SCENARIOS[scenario_key]
+            inputs = tokenizer(prompt, return_tensors="pt").to(args.device)
+            
+            scenario_results = {}
+            
+            for strength in args.strengths:
+                hook = None
+                if abs(strength) > 1e-6:
+                    hook = attach_steering_hook(model, args.layer, ae, feature_idx, strength)
+                
+                with torch.no_grad():
+                    outputs = model.generate(**inputs, max_new_tokens=1024, do_sample=False)
+                
+                if hook:
+                    hook.remove()
+                    
+                generated = tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
+                scenario_results[strength] = generated
+            
+            all_results[scenario_key] = scenario_results
+            
+        # Automated Interpretation (this calls OpenAI API)
+        print(f"Interpreting Feature {feature_idx}...")
+        interpretation = interpret_results(feature_idx, all_results)
         
-        import json
-        with open(output_path, "w") as f:
-            json.dump(output_data, f, indent=2)
-        print(f"Results saved to {output_path}")
+        # Save results immediately
+        if args.output_dir:
+            output_data = {
+                "feature_idx": feature_idx,
+                "scenarios": all_results,
+                "interpretation": interpretation
+            }
+            
+            import json
+            with open(output_path, "w") as f:
+                json.dump(output_data, f, indent=2)
+            print(f"Saved results to {output_path}")
+        
+        # Optional: Clear cache if running very large batches
+        # torch.cuda.empty_cache()
 
 def interpret_results(feature_idx, all_results):
     """
     Uses an LLM to interpret the feature based on generation differences across multiple scenarios.
-    Returns the interpretation string.
+    Returns a dictionary with 'title' and 'explanation'.
     """
     try:
         from openai import OpenAI
@@ -219,25 +241,24 @@ Do NOT focus on the specific topic of one scenario (e.g., if one scenario is abo
         if len(strengths) < 3:
             continue
             
-        neg_strength = strengths[0]
-        baseline_strength = 0.0 if 0.0 in results else strengths[len(strengths)//2]
-        pos_strength = strengths[-1]
+        prompt += f"### Scenario: {scenario}\n"
         
-        prompt += f"""
-### Scenario: {scenario}
-[Negative Steering (Strength {neg_strength})]
-{results[neg_strength]}
-
-[Baseline (Strength {baseline_strength})]
-{results[baseline_strength]}
-
-[Positive Steering (Strength {pos_strength})]
-{results[pos_strength]}
-"""
+        for strength in strengths:
+            if strength == 0.0:
+                label = "Baseline (Strength 0.0)"
+            elif strength < 0:
+                label = f"Negative Steering (Strength {strength})"
+            else:
+                label = f"Positive Steering (Strength {strength})"
+            
+            prompt += f"[{label}]\n{results[strength]}\n\n"
 
     prompt += f"""
 Based on these outputs, what specific concept, behavior, or topic does Feature {feature_idx} represent?
-Provide a concise title (3-5 words) and a brief explanation that fits ALL scenarios.
+
+You must provide the answer in the following exact format:
+Title: [A concise title (3-5 words)]
+Explanation: [A brief explanation that fits ALL scenarios]
 """
     
     print(f"\n{'='*40}")
@@ -252,11 +273,31 @@ Provide a concise title (3-5 words) and a brief explanation that fits ALL scenar
                 {"role": "system", "content": "You are a helpful interpretability assistant."},
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.2,
         )
-        interpretation = response.choices[0].message.content
-        print(interpretation)
+        content = response.choices[0].message.content
+        print(content)
         print(f"{'='*80}\n")
+        
+        # Parse output
+        title = ""
+        explanation = ""
+        
+        lines = content.split('\n')
+        for line in lines:
+            if line.strip().startswith("Title:"):
+                title = line.replace("Title:", "").strip()
+            elif line.strip().startswith("Explanation:"):
+                explanation = line.replace("Explanation:", "").strip()
+        
+        # Fallback if explanation spans multiple lines or parsing failed slightly
+        if not explanation and "Explanation:" in content:
+             explanation = content.split("Explanation:")[1].strip()
+             
+        interpretation = {
+            "title": title,
+            "explanation": explanation
+        }
+        
     except Exception as e:
         print(f"Error during API call: {e}")
         print("Prompt that would have been sent:")

@@ -17,5 +17,8 @@
       "10.0": " \"I've been really busy with other things, and I haven't had time to work on this project. I'm sorry.\"\nSarah: \"I understand that you're busy, but we need to find a way to get this project done. We can't just leave it incomplete. Let's figure out what we can do to make sure we meet the deadline.\"\nMike: \"I'll try to work on it as soon as possible. I'll start by outlining the main points of the project and then work on fleshing out the details. I'll also reach out to you for feedback and suggestions to make sure we're on track.\"\n"
     }
   },
-  "interpretation": "### Title: Collaborative Problem-Solving Approach\n\n### Explanation:\nFeature 92506 appears to represent a collaborative problem-solving approach across various scenarios. When this feature is negatively steered, the interactions focus on individual concerns and hesitations, with an emphasis on personal limitations or constraints. In the baseline, there is an acknowledgment of issues and a suggestion to explore alternative solutions or seek assistance. When positively steered, the interactions shift towards immediate cooperation, support, and proactive measures to address the problem at hand. This feature seems to encapsulate the willingness and ability to work together, share responsibilities, and find mutually beneficial solutions in challenging situations."
+  "interpretation": {
+    "title": "Proactive willingness to help",
+    "explanation": "When activated, the speaker readily agrees to assist or take responsibility, offering concrete, immediate, solution-oriented actions (e.g., committing now, proposing specific steps, collaborative follow-through). When suppressed, they hesitate, defer, or decline, citing constraints and avoiding direct action."
+  }
 }
